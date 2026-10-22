@@ -57,8 +57,9 @@ main.wide{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
 
 .panel{background:var(--panel);border-radius:6px;display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);min-width:0}
 .steps{display:grid;grid-template-columns:repeat(7,minmax(60px,1fr));overflow-x:auto;border-bottom:1px solid var(--line)}
-.steps button{border:0;background:none;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted);border-bottom:3px solid transparent;min-height:64px}
+.steps button{border:0;background:none;padding:10px 2px 8px;line-height:1.15;text-align:center;white-space:nowrap;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted);border-bottom:3px solid transparent;min-height:64px}
 .steps button b{font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);font-weight:500}
+.steps button{font-size:11.5px}
 .steps button.on{color:var(--ink);border-bottom-color:var(--accent)}
 .steps button.on b{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .steps button.done b{border-color:var(--accent);color:var(--accent)}
@@ -117,6 +118,12 @@ h2{font-family:var(--display);font-weight:700;font-size:26px;margin:0;text-wrap:
 .tier button b{display:block;font-size:16px}
 .tier button span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
 .tier button.on{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.hwinfo{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5}
+.hwinfo ul{margin:0;padding-left:18px}
+.hwinfo dl{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:0}
+.hwinfo dd{margin:0;font-family:var(--mono);text-align:right}
+.demo{min-height:48px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:999px;font-weight:600;padding:0 18px;align-self:flex-start}
+.check small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.35}
 
 /* cut list */
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -152,6 +159,15 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
 .cutgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .warn{background:#F6E7E2;color:var(--warn);border-radius:6px;padding:10px 12px;font-size:14px;margin:0}
 .ai-btn[hidden]{display:none}
+.quick[hidden]{display:none}
+.quick{position:absolute;left:12px;right:12px;bottom:12px;max-height:58%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:14px 16px;display:flex;flex-direction:column;gap:14px;z-index:5}
+.quick-head{display:flex;align-items:center;gap:10px}
+.quick-head h3{margin:0;font-family:var(--display);font-size:20px;flex:1}
+.quick-head button{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px;padding:0 14px}
+.qsize{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;font-size:15px}
+.qsize button{width:48px;height:48px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:22px}
+.qsize output{font-family:var(--mono);min-width:72px;text-align:center;font-size:17px}
+.tap-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:76px;background:rgba(29,35,33,.78);color:#F4F6F2;font-size:13px;padding:6px 12px;border-radius:999px;pointer-events:none;white-space:nowrap}
 .ai-btn{position:absolute;left:16px;top:16px;min-height:52px;padding:0 20px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.18);display:inline-flex;align-items:center;gap:8px}
 .ai-box{position:absolute;left:16px;right:16px;top:80px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:14px;display:flex;flex-direction:column;gap:10px;max-height:60%;z-index:4}
 .ai-box[hidden]{display:none}
@@ -211,6 +227,8 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
   <main id="main">
     <section class="stage" id="stage" aria-label="3D ხედი">
       <div class="dims" id="dims"></div>
+      <div class="tap-hint" id="tapHint">შეეხე ავეჯს, კედელს ან იატაკს შესაცვლელად</div>
+      <div class="quick" id="quick" hidden></div>
       <div class="views" id="views">
         <button type="button" data-view="angle" class="on">კუთხიდან</button>
         <button type="button" data-view="front">წინიდან</button>
@@ -264,8 +282,14 @@ const POP={lam:['L001','L002','L170','L156','L004','L003','L165','L160'],pet:['P
 const HWT=[
   {id:'eco',n:'ეკონომი',s:'რბილი დახურვის ანჯამა, ბურთულიანი მიმმართველი',hinge:'ანჯამა რბილი დახურვით (ეკონომი)',drawer:'ბურთულიანი მიმმართველი + ლამინატის ყუთი',lift:'ამწევი მექანიზმი (ეკონომი)'},
   {id:'std',n:'სტანდარტი',s:'Hettich: Sensys ანჯამა, InnoTech უჯრა',hinge:'Hettich Sensys ანჯამა',drawer:'Hettich InnoTech Atira უჯრის სისტემა',lift:'Hettich Lift Advanced'},
-  {id:'prem',n:'პრემიუმი',s:'Blum: Clip top Blumotion, Legrabox',hinge:'Blum Clip top Blumotion ანჯამა',drawer:'Blum Legrabox უჯრის სისტემა',lift:'Blum Aventos HF'}
+  {id:'prem',n:'პრემიუმი',s:'Blum: Clip top Blumotion, Legrabox',hinge:'Blum Clip top Blumotion ანჯამა',drawer:'Blum Legrabox უჯრის სისტემა',lift:'Blum Aventos HK'}
 ];
+const HWINFO={
+  eco:{does:['კარი რბილად იხურება (თუ რბილი დახურვა ჩართულია)','უჯრა ბურთულიან მიმმართველზე, ბოლომდე ან თითქმის ბოლომდე გამოდის','უჯრის ყუთი ლამინატისგან იჭრება'],fit:'ბიუჯეტური პროექტი, გასაქირავებელი ბინა'},
+  std:{does:['ანჯამაში ჩაშენებული რბილი დახურვა, ჩუმად იხურება','უჯრა ბოლომდე გამოდის, რბილად იხურება','მეტალის უჯრის გვერდები, მარტივი რეგულირება'],fit:'ყველაზე ხშირი არჩევანი სახლისთვის'},
+  prem:{does:['Blumotion: ძალიან რბილი და ჩუმი დახურვა','Legrabox: თხელი მეტალის გვერდები, ბოლომდე გამოდის, მძიმე ტვირთზე','ზედა კარადებზე Aventos ამწევი ერთი ფრთით'],fit:'პრემიუმ სამზარეულო, ხანგრძლივი გამოყენება'}
+};
+const SVCINFO={measure:'ოსტატი ზომავს კედლებს, კუთხეებს, მილებს და როზეტებს',design:'3D პროექტი და ფერების შერჩევა კლიენტთან ერთად',delivery:'ავეჯის ჩამოტანა საამქროდან ბინამდე, სართულზე ატანით',install:'აწყობა, კედელზე დამაგრება, კარების და უჯრების რეგულირება',dismantle:'ძველი ავეჯის დაშლა და გატანა',appliance:'ქურის, ღუმელის, ჭურჭლის სარეცხის და მაცივრის ჩაშენება',cutout:'სამუშაო ზედაპირში ნიჟარის და ქურის ხვრელების ამოჭრა',sink:'ნიჟარის, ონკანის და სიფონის მიერთება',light:'ზედა კარადების ქვეშ LED ზოლის და ბლოკის მონტაჟი'};
 const SERVICES=[{id:'measure',n:'გაზომვა ობიექტზე'},{id:'design',n:'3D დიზაინი'},{id:'delivery',n:'მიტანა'},{id:'install',n:'მონტაჟი'},{id:'dismantle',n:'ძველი ავეჯის დემონტაჟი'},{id:'appliance',n:'ტექნიკის ჩაშენება'},{id:'cutout',n:'ზედაპირში ქურის/ნიჟარის ამოჭრა'},{id:'sink',n:'ნიჟარის და ონკანის მონტაჟი'},{id:'light',n:'LED განათების მონტაჟი'}];
 const STYLES=[{id:'flat',n:'გლუვი'},{id:'shaker',n:'ჩარჩოიანი'},{id:'gola',n:'GOLA პროფილი'}];
 const HANDLES=[{id:'bar',n:'ბარი'},{id:'knob',n:'ღილაკი'}];
@@ -372,6 +396,7 @@ const COLORS=[
   {id:'S3010',c:'3010',n:'İnci Siyah',hex:'#030303',g:'supra'},
   {id:'S3095',c:'3095',n:'Victoria Gri',hex:'#D2D1CC',g:'supra'}
 ];
+const WALLS=[{id:'plaster',c:'',n:'თეთრი',hex:'#ECEAE5'},{id:'mist',c:'',n:'ნისლი',hex:'#D5DBD6'},{id:'linen',c:'',n:'სელი',hex:'#E2D3C2'},{id:'sky',c:'',n:'ცისფერი',hex:'#C6D0D7'},{id:'sage',c:'',n:'სალბი',hex:'#B9C2B1'},{id:'moss',c:'',n:'ხავსი',hex:'#69736A'},{id:'clay',c:'',n:'თიხა',hex:'#C9A08A'},{id:'graphite',c:'',n:'გრაფიტი',hex:'#55595A'}];
 const FLOORS=[
   {id:'base',c:'',n:'ღია მუხა',hex:'#C9A77A',wood:true},
   {id:'PRK310',c:'PRK310',n:'Armonia',hex:'#A5967E',wood:true},
@@ -415,11 +440,12 @@ const colorsFor=m=>COLORS.filter(c=>c.g===m);
 const cName=c=>(c.c?c.c+' ':'')+c.n;
 const TOPS=[{id:'quartz',n:'თეთრი კვარცი',hex:'#E9E7E2'},{id:'concrete',n:'ბეტონი',hex:'#9A9893'},{id:'granite',n:'შავი გრანიტი',hex:'#262626'},{id:'oak',n:'მუხის მასივი',hex:'#B58E5B',wood:true}];
 const STEP_NAMES=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტურა','დეტალირება','რასკროი'];
+const STEP_SHORT=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტ.','დეტალები','რასკროი'];
 const LAST=STEP_NAMES.length-1;
-const DEFAULTS={type:'kitchen',w:3000,h:2400,d:600,n:5,upper:true,mirror:true,material:'lam',style:'flat',handle:'bar',hcolor:'black',front:'L156',body:'L001',top:'quartz',floor:'base',hw:'std',soft:true,lift:false,svc:['measure','delivery','install'],
+const DEFAULTS={type:'kitchen',w:3000,h:2400,d:600,n:5,upper:true,mirror:true,material:'lam',style:'flat',handle:'bar',hcolor:'black',front:'L156',body:'L001',top:'quartz',floor:'base',wall:'plaster',hw:'std',soft:true,lift:false,svc:['measure','delivery','install'],
   client:'',phone:'',address:'',note:''};
 const byId=(arr,id)=>arr.find(x=>x.id===id);
-function normalize(){if(!MATERIALS.some(m=>m.id===S.material))S.material='lam';const fl=colorsFor(S.material);if(!fl.some(c=>c.id===S.front))S.front=(POP[S.material]||[fl[0].id])[0];if(!colorsFor('lam').some(c=>c.id===S.body))S.body='L001';delete S.sheet;if(!HWT.some(h=>h.id===S.hw))S.hw='std';if(!Array.isArray(S.svc))S.svc=[];if(!FLOORS.some(f=>f.id===S.floor))S.floor='base';}
+function normalize(){if(!MATERIALS.some(m=>m.id===S.material))S.material='lam';const fl=colorsFor(S.material);if(!fl.some(c=>c.id===S.front))S.front=(POP[S.material]||[fl[0].id])[0];if(!colorsFor('lam').some(c=>c.id===S.body))S.body='L001';delete S.sheet;if(!HWT.some(h=>h.id===S.hw))S.hw='std';if(!Array.isArray(S.svc))S.svc=[];if(!FLOORS.some(f=>f.id===S.floor))S.floor='base';if(!WALLS.some(w=>w.id===S.wall))S.wall='plaster';}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function autoN(st){return st.type==='kitchen'?Math.max(2,Math.round(st.w/600)):st.type==='wardrobe'?Math.min(8,Math.max(1,Math.round(st.w/500))):1;}
 function nRange(){return S.type==='kitchen'?[2,8]:S.type==='wardrobe'?[1,8]:[1,1];}
@@ -487,14 +513,14 @@ function flat(hex,rough,metal,emissive){
   return matCache[key]=m;
 }
 const wallMat=new THREE.MeshStandardMaterial({roughness:.95,color:new THREE.Color('#ECEAE5').convertSRGBToLinear()});
-const wall=new THREE.Mesh(new THREE.PlaneGeometry(14,5),wallMat);wall.position.set(0,2.5,0);wall.receiveShadow=true;scene.add(wall);
+const wall=new THREE.Mesh(new THREE.PlaneGeometry(14,5),wallMat);wall.position.set(0,2.5,0);wall.receiveShadow=true;wall.userData.part='wall';scene.add(wall);
 const floorMat=new THREE.MeshStandardMaterial({roughness:.7});const floorTex={};
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,9),floorMat);floor.rotation.x=-Math.PI/2;floor.position.set(0,0,4.5);floor.receiveShadow=true;scene.add(floor);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,9),floorMat);floor.rotation.x=-Math.PI/2;floor.position.set(0,0,4.5);floor.receiveShadow=true;floor.userData.part='floor';scene.add(floor);
 
 function depthMm(){return S.type==='kitchen'?600:S.type==='wardrobe'?S.d:460;}
 function heightMm(){return S.type==='kitchen'?(S.upper?2170:860):S.type==='wardrobe'?S.h:(S.mirror?2020:850);}
 
-let furniture=null;
+let furniture=null,selBox=null,qPart=null;
 function build(){
   if(furniture){scene.remove(furniture);furniture.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
   const G=new THREE.Group();furniture=G;
@@ -504,9 +530,18 @@ function build(){
   const bodyMat=surf(bc,.6,true);
   const handleMat=flat(hc.hex,.35,hc.metal);
   const groove=flat('#151515',.6,.3);
-  const W=S.w/1000,n=S.n;
-  function box(w,h,d,m,x,y,z){const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=me.receiveShadow=true;G.add(me);return me;}
+  const W=S.w/1000,n=S.n;let topRef=null;
+  let TGT=G;
+  function box(w,h,d,m,x,y,z){const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=me.receiveShadow=true;TGT.add(me);return me;}
   function front(w,h,x,y,zf,o){
+    const fg=new THREE.Group(),pv=new THREE.Group();TGT=fg;
+    if(o.horiz){pv.userData.kind='drawer';}
+    else if(o.lift){pv.position.set(0,y+h/2,zf);fg.position.set(0,-(y+h/2),-zf);pv.userData.kind='lift';}
+    else{const side=(o.hx||0)>0?-1:1;const px=x+side*w/2;pv.position.set(px,0,zf);fg.position.set(-px,0,-zf);pv.userData.kind='door';pv.userData.dir=side;}
+    pv.add(fg);G.add(pv);
+    try{frontInner(w,h,x,y,zf,o);}finally{TGT=G;}
+  }
+  function frontInner(w,h,x,y,zf,o){
     const t=.019,m=o.horiz?frontMatH:frontMatV;
     if(S.style==='shaker'){
       const f=Math.min(.07,w*.17,h*.17);
@@ -517,7 +552,7 @@ function build(){
     if(S.style==='gola'){box(w,.022,.002,groove,x,o.grooveBottom?y-h/2+.012:y+h/2-.012,zf+t+.001);return;}
     const hx=x+(o.hx||0),hy=y+(o.hy||0),hz=zf+t;
     if(S.handle==='knob'){
-      const k=new THREE.Mesh(new THREE.CylinderGeometry(.014,.011,.03,20),handleMat);k.rotation.x=Math.PI/2;k.position.set(hx,hy,hz+.015);k.castShadow=true;G.add(k);
+      const k=new THREE.Mesh(new THREE.CylinderGeometry(.014,.011,.03,20),handleMat);k.rotation.x=Math.PI/2;k.position.set(hx,hy,hz+.015);k.castShadow=true;TGT.add(k);
     }else{
       const L=o.len||.16;
       if(o.horiz){box(L,.012,.012,handleMat,hx,hy,hz+.026);}
@@ -527,7 +562,7 @@ function build(){
   const gap=.002;
   if(S.type==='kitchen'){
     const D=.6,cw=W/n,top=byId(TOPS,S.top);
-    const topMat=top.wood?surf(top,.55,false):flat(top.hex,top.id==='granite'?.25:.45);
+    const topMat=top.wood?surf(top,.55,false):flat(top.hex,top.id==='granite'?.25:.45);topRef=topMat;
     box(W,.1,D-.08,flat('#2a2b2b',.8),0,.05,(D-.08)/2);
     box(W,.72,D-.04,bodyMat,0,.46,(D-.04)/2);
     box(W+.01,.04,D+.01,topMat,0,.84,(D+.01)/2);
@@ -553,7 +588,7 @@ function build(){
       box(W,Hu,Du-.02,bodyMat,0,yb+Hu/2,(Du-.02)/2);
       for(let i=0;i<n;i++){
         const x=-W/2+cw*i+cw/2,doors=S.lift?1:(cw>.6?2:1),dw=cw/doors;
-        for(let k=0;k<doors;k++){const dx=x-cw/2+dw*k+dw/2,side=doors===2?(k?-1:1):(i%2?-1:1);front(dw-gap*2,Hu-gap*2,dx,yb+Hu/2,Du-.02,{hx:side*(dw/2-.04),hy:-Hu/2+.11,grooveBottom:true});}
+        for(let k=0;k<doors;k++){const dx=x-cw/2+dw*k+dw/2,side=doors===2?(k?-1:1):(i%2?-1:1);front(dw-gap*2,Hu-gap*2,dx,yb+Hu/2,Du-.02,{hx:side*(dw/2-.04),hy:-Hu/2+.11,grooveBottom:true,lift:S.lift});}
       }
       box(W-.04,.008,.02,flat('#fff7e0',.5,0,'#fff2cc'),0,yb-.006,Du-.06);
     }
@@ -574,7 +609,10 @@ function build(){
     const tap=new THREE.Mesh(new THREE.CylinderGeometry(.012,.014,.16,16),handleMat);tap.position.set(0,yb+Hv+.13,.07);G.add(tap);
     if(S.mirror){const mw=Math.min(W*.9,1.1);box(mw+.02,.82,.02,flat('#2a2b2b',.5),0,1.62,.01);box(mw,.8,.005,flat('#cfd8dc',.06,.55),0,1.62,.023);}
   }
+  G.traverse(o=>{if(!o.isMesh)return;const m=o.material;o.userData.part=(m===frontMatV||m===frontMatH)?'front':m===bodyMat?'body':m===handleMat?'handle':(topRef&&m===topRef)?'top':'body';});
+  if(selBox){scene.remove(selBox);selBox=null;}
   scene.add(G);
+  wallMat.color.set((byId(WALLS,S.wall)||WALLS[0]).hex).convertSRGBToLinear();
   const fl=byId(FLOORS,S.floor)||FLOORS[0];floorMat.map=floorTex[fl.id]||(floorTex[fl.id]=floorTexture(fl.hex));floorMat.needsUpdate=true;
   document.getElementById('dims').innerHTML=`<small>სიგანე × სიმაღლე × სიღრმე</small>${S.w} × ${heightMm()} × ${depthMm()} მმ`;
   fitCamera(false);
@@ -594,21 +632,35 @@ function fitCamera(snap){
 }
 const ptrs=new Map();let pinch0=0,r0=0;
 const cv=renderer.domElement;
-cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){const p=[...ptrs.values()];pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);r0=cam.tR;}});
+let tap0=null;
+cv.addEventListener('pointerdown',e=>{tap0=ptrs.size?null:{x:e.clientX,y:e.clientY,t:performance.now()};cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){const p=[...ptrs.values()];pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);r0=cam.tR;}});
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===1){cam.tTheta=THREE.MathUtils.clamp(cam.tTheta-(e.clientX-prev.x)*.006,-1.3,1.3);cam.tPhi=THREE.MathUtils.clamp(cam.tPhi-(e.clientY-prev.y)*.005,.55,1.56);setView(null);}
   else if(ptrs.size===2){const p=[...ptrs.values()];const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch0)cam.tR=THREE.MathUtils.clamp(r0*pinch0/d,1.2,12);}
 });
-const up=e=>{ptrs.delete(e.pointerId);pinch0=0;};
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+function pick(cx,cy){
+  const r=cv.getBoundingClientRect();ndc.set(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(furniture?[furniture,wall,floor]:[wall,floor],true);
+  if(!hits.length)return;const o=hits[0].object;const part=o.userData.part||'body';
+  if(selBox){scene.remove(selBox);selBox=null;}
+  if(part!=='wall'&&part!=='floor'){selBox=new THREE.BoxHelper(o,0xA9844A);scene.add(selBox);}
+  openQuick(part);
+}
+const up=e=>{const t=tap0;ptrs.delete(e.pointerId);pinch0=0;if(t&&!ptrs.size&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<8&&performance.now()-t.t<450)pick(e.clientX,e.clientY);tap0=null;};
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();cam.tR=THREE.MathUtils.clamp(cam.tR*(1+e.deltaY*.001),1.2,12);},{passive:false});
 function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
 new ResizeObserver(()=>{resize();fitCamera(false);}).observe(stage);
 resize();
-function loop(){
-  const k=.1;
+let demoT0=-1;
+function runDemo(){demoT0=performance.now();if(view!=='angle'){setView('angle');fitCamera(false);}}
+function demoAmount(now){if(demoT0<0)return 0;const t=(now-demoT0)/1000;if(t>3.4){demoT0=-1;return 0;}const e=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;return t<.9?e(t/.9):t<2.4?1:e(1-(t-2.4)/1);}
+function applyOpen(a){if(!furniture)return;furniture.children.forEach(pv=>{const k=pv.userData.kind;if(!k)return;if(k==='door')pv.rotation.y=-pv.userData.dir*a*1.35;else if(k==='drawer')pv.position.z=a*.42;else if(k==='lift')pv.rotation.x=-a*1.25;});}
+function loop(now){
+  const k=.1;applyOpen(demoAmount(now||performance.now()));
   cam.theta+=(cam.tTheta-cam.theta)*k;cam.phi+=(cam.tPhi-cam.phi)*k;cam.r+=(cam.tR-cam.r)*k;cam.target.lerp(cam.tTarget,k);
   camera.position.set(cam.target.x+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta),cam.target.y+cam.r*Math.cos(cam.phi),cam.target.z+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta));
   camera.lookAt(cam.target);renderer.render(scene,camera);requestAnimationFrame(loop);
@@ -769,8 +821,25 @@ function field(key,label,type,ph){
 }
 function projName(st){const T=TYPES[st.type];return (st.client?st.client+' · ':'')+T.n+' '+st.w+(st.type==='wardrobe'?'×'+st.h:'');}
 
+const $quick=document.getElementById('quick');
+const QT={front:'ფასადი',body:'კორპუსი',top:'სამუშაო ზედაპირი',handle:'სახელური',wall:'კედელი',floor:'იატაკი'};
+function openQuick(part){qPart=part;const h=document.getElementById('tapHint');if(h)h.hidden=true;renderQuick();$quick.hidden=false;}
+function closeQuick(){qPart=null;$quick.hidden=true;if(selBox){scene.remove(selBox);selBox=null;}}
+function qsize(key,label,stepv){const l=lim(key);if(!l)return'';return `<div class="qsize"><span>${label}</span><button type="button" data-step="${key}" data-d="-${stepv||l[2]}" aria-label="${label} შემცირება">−</button><output>${S[key]}</output><button type="button" data-step="${key}" data-d="${stepv||l[2]}" aria-label="${label} გაზრდა">+</button></div>`;}
+function sizeBlock(){const T=TYPES[S.type];let h=qsize('w','სიგანე, მმ',50);if(T.h)h+=qsize('h','სიმაღლე, მმ',50);if(T.dp)h+=qsize('d','სიღრმე, მმ',10);if(S.type!=='vanity')h+=qsize('n',S.type==='kitchen'?'მოდულები':'კარები',1);return `<div class="group"><span class="label">ზომა</span>${h}</div>`;}
+function renderQuick(){
+  if(!qPart){$quick.hidden=true;return;}
+  let h=`<div class="quick-head"><h3>${QT[qPart]||'ავეჯი'}</h3><button type="button" data-goto-q="${qPart}">ყველა პარამეტრი</button><button type="button" id="quickClose" aria-label="დახურვა">✕</button></div>`;
+  if(qPart==='front'){h+=`<div class="group"><span class="label">მასალა</span>${seg('material',MATERIALS)}</div><div class="group"><span class="label">ფერი · ${byId(MATERIALS,S.material).n}</span>${picker('front',colorsFor(S.material),POP[S.material]||colorsFor(S.material).map(c=>c.id))}</div><div class="group"><span class="label">დიზაინი</span>${seg('style',STYLES,x=>x.id==='shaker'&&S.material!=='paint')}</div>`+sizeBlock();}
+  else if(qPart==='body'){h+=`<div class="group"><span class="label">კორპუსის დეკორი · AGT LAM 18</span>${picker('body',colorsFor('lam'),POP.body)}</div>`+sizeBlock()+(S.type==='kitchen'?toggle('upper','ზედა კარადები','ჩართვა / გამორთვა'):'');}
+  else if(qPart==='top'){h+=`<div class="group"><span class="label">ზედაპირი</span>${swatches('top',TOPS)}</div>`;}
+  else if(qPart==='handle'){h+=`<div class="group"><span class="label">ფორმა</span>${seg('handle',HANDLES)}${swatches('hcolor',HCOLORS)}</div><div class="group"><span class="label">ან სახელურის გარეშე</span>${seg('style',STYLES.filter(x=>x.id!=='shaker'))}</div>`;}
+  else if(qPart==='wall'){h+=`<div class="group"><span class="label">კედლის ფერი (მხოლოდ ხედისთვის)</span>${swatches('wall',WALLS)}</div>`;}
+  else if(qPart==='floor'){h+=`<div class="group"><span class="label">იატაკი · AGT ლამინატი</span>${picker('floor',FLOORS,['base',...POP.floor])}</div>`;}
+  $quick.innerHTML=h;
+}
 function render(){
-  $steps.innerHTML=STEP_NAMES.map((n,i)=>`<button type="button" data-goto="${i}" class="${i===step?'on':''} ${i<step?'done':''}"><b>${i+1}</b>${n}</button>`).join('');
+  $steps.innerHTML=STEP_NAMES.map((n,i)=>`<button type="button" data-goto="${i}" class="${i===step?'on':''} ${i<step?'done':''}" title="${n}"><b>${i+1}</b>${STEP_SHORT[i]}</button>`).join('');
   $main.classList.toggle('wide',step>=5);
   const T=TYPES[S.type];let h='';
   if(step===0){
@@ -802,9 +871,10 @@ function render(){
   }else if(step===4){
     h=`<h2>ფურნიტურა და სერვისი</h2>
     <div class="group"><span class="label">ფურნიტურის დონე</span><div class="tier">${HWT.map(t=>`<button type="button" data-set="hw" data-val="${t.id}" class="${S.hw===t.id?'on':''}"><b>${t.n}${t.id==='std'?'<span class="pop">★ პოპულარული</span>':''}</b><span>${t.s}</span></button>`).join('')}</div></div>`;
+    {const Rh=calc(),I=HWINFO[S.hw];h+=`<div class="hwinfo"><b>რას აკეთებს</b><ul>${I.does.map(x=>`<li>${x}</li>`).join('')}</ul><span class="note">${I.fit}</span><b>ამ პროექტში</b><dl>${Object.entries(Rh.HW).filter(([k])=>!/ზედაპირი|სახელური|ფეხი|საყრდენი/.test(k)).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl><button type="button" class="demo" id="demoBtn">▶ გახსნის ჩვენება 3D-ში</button></div>`;}
     if(S.hw==='eco')h+=toggle('soft','რბილი დახურვა','ანჯამებზე Soft Close');
     if(S.type==='kitchen'&&S.upper)h+=toggle('lift','ზედა კარადებზე ამწევი კარი','ერთი ფრთა ზევით იხსნება, ანჯამის ნაცვლად ამწევი მექანიზმი');
-    h+=`<div class="group"><span class="label">სერვისი</span><div class="checks">${SERVICES.filter(v=>S.type==='kitchen'||!['cutout','appliance','sink'].includes(v.id)||(S.type==='vanity'&&v.id==='sink')).map(v=>`<button type="button" class="check ${S.svc.includes(v.id)?'on':''}" data-svc="${v.id}"><i>${S.svc.includes(v.id)?'✓':''}</i>${v.n}</button>`).join('')}</div></div>`;
+    h+=`<div class="group"><span class="label">სერვისი</span><div class="checks">${SERVICES.filter(v=>S.type==='kitchen'||!['cutout','appliance','sink'].includes(v.id)||(S.type==='vanity'&&v.id==='sink')).map(v=>`<button type="button" class="check ${S.svc.includes(v.id)?'on':''}" data-svc="${v.id}"><i>${S.svc.includes(v.id)?'✓':''}</i><span>${v.n}${S.svc.includes(v.id)?`<small>${SVCINFO[v.id]||''}</small>`:''}</span></button>`).join('')}</div></div>`;
   }else if(step===5){
     const R=calc();
     let rowsHtml='',g='',i=0;
@@ -850,6 +920,7 @@ function render(){
   const prev=document.getElementById('prev');prev.style.visibility=step===0?'hidden':'visible';
   document.getElementById('next').textContent=step===LAST?'შენახვა':'შემდეგი';
   renderHeader();
+  if(qPart)renderQuick();
 }
 function renderHeader(){
   document.getElementById('pName').textContent=projName(S);
@@ -869,13 +940,16 @@ function commitNum(k,v){
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.type){const k=b.dataset.type;if(S.type!==k){S.type=k;Object.assign(S,TYPES[k].def);S.n=autoN(S);}change();return;}
-  if(b.dataset.set){S[b.dataset.set]=b.dataset.val;
+  if(b.dataset.set){S[b.dataset.set]=b.dataset.val;if(b.dataset.set==='hw')setTimeout(runDemo,50);
     if(S.material!=='paint'&&S.style==='shaker')S.style='flat';
     normalize();
     change();return;}
+  if(b.id==='demoBtn'){runDemo();return;}
+  if(b.id==='quickClose'){closeQuick();return;}
+  if(b.dataset.gotoQ){const m={front:3,body:3,top:3,handle:3,wall:3,floor:3};step=m[b.dataset.gotoQ]||3;closeQuick();render();$c.scrollTop=0;return;}
   if(b.dataset.all){const k=b.dataset.all;ui.all[k]=!ui.all[k];render();return;}
   if(b.dataset.svc){const v=b.dataset.svc;S.svc=S.svc.includes(v)?S.svc.filter(x=>x!==v):[...S.svc,v];touch();render();return;}
-  if(b.dataset.toggle){S[b.dataset.toggle]=!S[b.dataset.toggle];change();return;}
+  if(b.dataset.toggle){S[b.dataset.toggle]=!S[b.dataset.toggle];if(['lift','soft'].includes(b.dataset.toggle))setTimeout(runDemo,50);change();return;}
   if(b.dataset.step){const k=b.dataset.step;const v=S[k]+(+b.dataset.d);const [mn,mx]=lim(k);S[k]=Math.min(mx,Math.max(mn,v));if(k==='w'&&S.type!=='vanity')S.n=autoN(S);change();return;}
   if(b.dataset.goto){step=+b.dataset.goto;render();$c.scrollTop=0;return;}
   if(b.dataset.view){setView(b.dataset.view);fitCamera(false);return;}
