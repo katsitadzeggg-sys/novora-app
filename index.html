@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Novora კონსტრუქტორი</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&family=Noto+Serif+Georgian:wght@500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#E4E6E2;
+  --panel:#F7F7F4;
+  --ink:#1D2321;
+  --muted:#5A635E;
+  --line:#CDD1CC;
+  --accent:#2C5A4D;
+  --accent-ink:#F4F6F2;
+  --brass:#A9844A;
+  --warn:#9A3B26;
+  --stage:#D9DBD6;
+  --display:"Noto Serif Georgian", Georgia, serif;
+  --body:"Noto Sans Georgian", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;-webkit-tap-highlight-color:transparent;overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;gap:14px;padding:14px clamp(16px,2vw,24px)}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.3em}
+.proj{display:flex;flex-direction:column;border-left:1px solid var(--line);padding-left:16px;min-width:0}
+.proj b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34ch}
+.proj small{font-size:13px;color:var(--muted)}
+.proj small.dirty{color:var(--warn)}
+.hdr-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.ghost{min-height:48px;padding:0 18px;border:1px solid var(--line);background:var(--panel);border-radius:999px;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+.ghost svg{width:18px;height:18px}
+.ghost.solid{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,460px);gap:16px;min-height:0}
+main.wide{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.stage{position:relative;background:var(--stage);border-radius:6px;overflow:hidden;min-height:0;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.views{position:absolute;left:16px;bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+.views button{min-height:48px;padding:0 16px;border:0;border-radius:999px;background:rgba(247,247,244,.92);font-size:15px;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.views button.on{background:var(--ink);color:var(--accent-ink)}
+.dims{position:absolute;right:16px;top:16px;background:rgba(247,247,244,.94);padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}
+.dims small{display:block;font-family:var(--body);font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:2px}
+
+.panel{background:var(--panel);border-radius:6px;display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);min-width:0}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line)}
+.steps button{border:0;background:none;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted);border-bottom:3px solid transparent;min-height:64px}
+.steps button b{font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);font-weight:500}
+.steps button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.steps button.on b{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.steps button.done b{border-color:var(--accent);color:var(--accent)}
+.content{flex:1;overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:24px;min-height:0}
+h2{font-family:var(--display);font-weight:700;font-size:26px;margin:0;text-wrap:balance}
+.lede{margin:-12px 0 0;color:var(--muted);font-size:15px;line-height:1.5}
+.group{display:flex;flex-direction:column;gap:10px}
+.label{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);line-height:1.45;margin:0}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field textarea{font:inherit;font-size:18px;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:100%}
+.field textarea{min-height:90px;resize:vertical;font-size:16px}
+
+.types{display:grid;gap:12px}
+.type{display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:center;text-align:left;padding:14px;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:96px}
+.type svg{width:96px;height:68px;stroke:var(--ink);fill:none;stroke-width:1.6}
+.type strong{display:block;font-size:19px;font-weight:600}
+.type span{color:var(--muted);font-size:14px}
+.type.on{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.seg button{min-height:56px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 10px;font-size:15px;line-height:1.25}
+.seg button small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.seg button.on{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);font-weight:600}
+.seg button:disabled{opacity:.38;cursor:not-allowed}
+
+.num{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center}
+.num button{height:64px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:28px;line-height:1}
+.num input{height:64px;width:100%;text-align:center;font-family:var(--mono);font-size:30px;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.numhead{display:flex;justify-content:space-between;align-items:baseline}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:64px;text-align:left;width:100%}
+.sw{width:58px;height:34px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on .sw{background:var(--accent)}
+.toggle.on .sw::after{transform:translateX(24px)}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:12px 8px}
+.swatch{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px;font-size:12px;line-height:1.25;text-align:center;color:var(--ink)}
+.chip{width:52px;height:52px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background-size:cover}
+.swatch.on .chip{box-shadow:0 0 0 3px var(--panel),0 0 0 6px var(--accent)}
+.swatch.on{font-weight:600}
+.swatch b{display:block;font-family:var(--mono);font-size:12px;font-weight:500}
+.swatch:disabled{opacity:.3;cursor:not-allowed}
+.more{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.more button{min-height:44px;padding:0 16px;border:1px dashed var(--line);border-radius:999px;background:#fff;font-size:14px}
+.more input{flex:1 1 160px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
+.pop{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--brass);vertical-align:middle}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.check{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;text-align:left;font-size:15px;width:100%}
+.check i{width:24px;height:24px;border-radius:5px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+.check.on{border-color:var(--accent)}
+.check.on i{background:var(--accent);border-color:var(--accent)}
+.tier{display:grid;gap:8px}
+.tier button{text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:64px}
+.tier button b{display:block;font-size:16px}
+.tier button span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.tier button.on{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* cut list */
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card small{font-size:12px;color:var(--muted)}
+.card b{font-family:var(--mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.card span{font-size:13px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid #E3E5E1;vertical-align:top}
+th{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:600;background:#F1F2EF;position:sticky;top:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
+.hw{display:grid;grid-template-columns:1fr auto;gap:6px 16px;margin:0;font-size:15px}
+.hw dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.hw dt{color:var(--ink)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions button{flex:1 1 160px;min-height:56px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:600}
+.actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.toast{font-size:14px;color:var(--accent);min-height:20px;margin:0}
+.copybox{width:100%;min-height:160px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:6px;padding:10px}
+
+.nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+.nav button{flex:1;min-height:60px;border-radius:6px;font-size:17px;font-weight:600;border:1px solid var(--line);background:#fff}
+.nav .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:2}
+
+/* projects drawer */
+.sheet[hidden]{display:none}
+.cutsheet{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.cutsheet svg{width:100%;height:auto;display:block}
+.cuthead{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.cuthead b{color:var(--ink);font-size:14px}
+.cutgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.warn{background:#F6E7E2;color:var(--warn);border-radius:6px;padding:10px 12px;font-size:14px;margin:0}
+.ai-btn[hidden]{display:none}
+.ai-btn{position:absolute;left:16px;top:16px;min-height:52px;padding:0 20px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.18);display:inline-flex;align-items:center;gap:8px}
+.ai-box{position:absolute;left:16px;right:16px;top:80px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:14px;display:flex;flex-direction:column;gap:10px;max-height:60%;z-index:4}
+.ai-box[hidden]{display:none}
+.ai-log{overflow-y:auto;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.45}
+.ai-log p{margin:0;padding:8px 12px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.ai-log p.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.ai-row{display:flex;gap:8px}
+.ai-row input{flex:1;min-height:52px;padding:0 14px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:16px;background:#fff;color:var(--ink);min-width:0}
+.ai-row button{min-height:52px;padding:0 18px;border:0;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.ai-hints{display:flex;gap:6px;flex-wrap:wrap}
+.ai-hints button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;min-height:36px}
+
+.sheet{position:fixed;inset:0;background:rgba(29,35,33,.45);display:flex;justify-content:flex-end;z-index:20}
+.sheet-in{width:min(560px,100%);height:100%;background:var(--panel);display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(18px + env(safe-area-inset-bottom,0px));gap:14px}
+.sheet-head{display:flex;align-items:center;gap:12px}
+.sheet-head h2{flex:1}
+.plist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.pitem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.pitem.cur{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.pitem .open{border:0;background:none;text-align:left;padding:4px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pitem .open b{font-size:17px;font-weight:600}
+.pitem .open span{font-size:13px;color:var(--muted)}
+.pbtns{display:flex;gap:6px}
+.pbtns button{min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:14px}
+.pbtns button.danger{color:var(--warn)}
+.pbtns button.confirm{background:var(--warn);color:#fff;border-color:var(--warn)}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;line-height:1.6}
+.storage{font-size:13px;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){.sw,.sw::after{transition:none}}
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{height:auto}
+  main,main.wide{grid-template-columns:1fr}
+  .stage{height:46vh;min-height:300px}
+  .panel{min-height:auto}
+  .content{overflow:visible}
+}
+@media (max-width:480px){
+  .ghost span{display:none}
+  .steps button{font-size:11px}
+  .content{padding:18px 16px}
+}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">NOVORA</div>
+    <div class="proj"><b id="pName">ახალი პროექტი</b><small id="pState">არ არის შენახული</small></div>
+    <div class="hdr-actions">
+      <button class="ghost" id="btnList" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>პროექტები</span></button>
+      <button class="ghost" id="btnNew" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>ახალი</span></button>
+      <button class="ghost solid" id="btnSave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span>შენახვა</span></button>
+      <button class="ghost" id="btnFull" type="button" aria-label="სრული ეკრანი"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </header>
+  <main id="main">
+    <section class="stage" id="stage" aria-label="3D ხედი">
+      <div class="dims" id="dims"></div>
+      <div class="views" id="views">
+        <button type="button" data-view="angle" class="on">კუთხიდან</button>
+        <button type="button" data-view="front">წინიდან</button>
+        <button type="button" data-view="close">ახლოდან</button>
+      </div>
+      <div class="ai-box" id="aiBox" hidden>
+        <div class="ai-log" id="aiLog" aria-live="polite"><p>მითხარი, რა შევცვალო. მაგ.: „სიგანე 3200 გახადე, ფასადი შავი, პრემიუმ ფურნიტურა“.</p></div>
+        <div class="ai-hints"><button type="button" data-hint="სიგანე 3200 მმ გახადე">სიგანე 3200</button><button type="button" data-hint="ფასადი მუხის ფერის გახადე">მუხის ფასადი</button><button type="button" data-hint="ზედა კარადები ამწევი კარით">ამწევი კარი</button><button type="button" data-hint="რამდენი ფილა და კრომკა დამჭირდება?">რამდენი ფილა?</button></div>
+        <div class="ai-row"><input id="aiIn" type="text" placeholder="დაწერე ბრძანება…" autocomplete="off" aria-label="AI ასისტენტის ბრძანება"><button type="button" id="aiSend">გაგზავნა</button></div>
+      </div>
+      <button type="button" class="ai-btn" id="aiBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M19 15l.8 1.7 1.7.8-1.7.8L19 20l-.8-1.7-1.7-.8 1.7-.8z"/></svg>AI ასისტენტი</button>
+    </section>
+    <aside class="panel">
+      <nav class="steps" id="steps"></nav>
+      <div class="content" id="content"></div>
+      <div class="nav">
+        <button type="button" id="prev">უკან</button>
+        <button type="button" id="next" class="primary">შემდეგი</button>
+      </div>
+    </aside>
+  </main>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in" role="dialog" aria-label="პროექტები">
+    <div class="sheet-head"><h2>პროექტები</h2><button class="ghost" type="button" id="sheetClose">დახურვა</button></div>
+    <p class="storage" id="storageNote"></p>
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+/* ---------- catalogue ---------- */
+const TYPES={
+  kitchen:{n:'სამზარეულო',d:'ქვედა და ზედა მოდულები, სამუშაო ზედაპირი',L:'K',w:[1200,4800,10],def:{w:3000},
+    icon:'<svg viewBox="0 0 96 68"><rect x="4" y="38" width="88" height="26"/><line x1="2" y1="38" x2="94" y2="38"/><rect x="4" y="6" width="88" height="20"/><line x1="26" y1="6" x2="26" y2="26"/><line x1="48" y1="6" x2="48" y2="26"/><line x1="70" y1="6" x2="70" y2="26"/><line x1="26" y1="38" x2="26" y2="64"/><line x1="48" y1="38" x2="48" y2="64"/><line x1="70" y1="38" x2="70" y2="64"/><line x1="26" y1="47" x2="48" y2="47"/><line x1="26" y1="55" x2="48" y2="55"/></svg>'},
+  wardrobe:{n:'კარადა',d:'ტანსაცმლის კარადა გასაღები კარებით',L:'W',w:[600,3600,10],h:[1800,2800,10],dp:[400,650,10],def:{w:2000,h:2400,d:600},
+    icon:'<svg viewBox="0 0 96 68"><rect x="16" y="2" width="64" height="62"/><line x1="32" y1="2" x2="32" y2="64"/><line x1="48" y1="2" x2="48" y2="64"/><line x1="64" y1="2" x2="64" y2="64"/><line x1="29" y1="26" x2="29" y2="38"/><line x1="35" y1="26" x2="35" y2="38"/><line x1="61" y1="26" x2="61" y2="38"/><line x1="67" y1="26" x2="67" y2="38"/></svg>'},
+  vanity:{n:'აბაზანის ტუმბო',d:'კიდული ტუმბო ორი უჯრით, სარკით',L:'B',w:[400,1400,10],def:{w:1000},
+    icon:'<svg viewBox="0 0 96 68"><rect x="22" y="4" width="52" height="24" rx="2"/><rect x="18" y="36" width="60" height="6"/><rect x="20" y="42" width="56" height="20"/><line x1="20" y1="51" x2="76" y2="51"/><line x1="42" y1="46" x2="54" y2="46"/><line x1="42" y1="56" x2="54" y2="56"/></svg>'}
+};
+const MATERIALS=[
+  {id:'lam',n:'AGT LAM 18',s:'ლამინატი · 2800×2100',rough:.55,sheet:'2800×2100',a:2.8*2.1,pop:1},
+  {id:'pet',n:'AGT 3P PET 18',s:'მქრქალი PET · 2800×1220',rough:.4,sheet:'2800×1220',a:2.8*1.22,pop:1},
+  {id:'trendy',n:'Trendy პანელი 18',s:'HG პრიალა / Soft Touch',rough:.25,sheet:'2800×1220',a:2.8*1.22},
+  {id:'supra',n:'Supramat 18',s:'სუპერმატი, ანტი-ანაბეჭდი',rough:.6,sheet:'2800×1220',a:2.8*1.22},
+  {id:'paint',n:'შეღებილი MDF',s:'AGT MDF 18 · ნებისმიერი RAL',rough:.32,sheet:'2800×2100',a:2.8*2.1}
+];
+const POP={lam:['L001','L002','L170','L156','L004','L003','L165','L160'],pet:['P3055','P3054','P3052','P3051','P3049','P3048','P3047','P3061'],trendy:['T601','T734','T730','T728','T6002','T723','T3076','T6013'],supra:['S3012','S3019','S3021','S3017','S3027','S3011','S3014','S3010'],body:['L001','L002','L170','L004','L003','L165','L160','L032'],floor:['PRK002','PRK202','PRK609','PRK502','PRK804','PRK230','PRK1012','PRK903']};
+const HWT=[
+  {id:'eco',n:'ეკონომი',s:'რბილი დახურვის ანჯამა, ბურთულიანი მიმმართველი',hinge:'ანჯამა რბილი დახურვით (ეკონომი)',drawer:'ბურთულიანი მიმმართველი + ლამინატის ყუთი',lift:'ამწევი მექანიზმი (ეკონომი)'},
+  {id:'std',n:'სტანდარტი',s:'Hettich: Sensys ანჯამა, InnoTech უჯრა',hinge:'Hettich Sensys ანჯამა',drawer:'Hettich InnoTech Atira უჯრის სისტემა',lift:'Hettich Lift Advanced'},
+  {id:'prem',n:'პრემიუმი',s:'Blum: Clip top Blumotion, Legrabox',hinge:'Blum Clip top Blumotion ანჯამა',drawer:'Blum Legrabox უჯრის სისტემა',lift:'Blum Aventos HF'}
+];
+const SERVICES=[{id:'measure',n:'გაზომვა ობიექტზე'},{id:'design',n:'3D დიზაინი'},{id:'delivery',n:'მიტანა'},{id:'install',n:'მონტაჟი'},{id:'dismantle',n:'ძველი ავეჯის დემონტაჟი'},{id:'appliance',n:'ტექნიკის ჩაშენება'},{id:'cutout',n:'ზედაპირში ქურის/ნიჟარის ამოჭრა'},{id:'sink',n:'ნიჟარის და ონკანის მონტაჟი'},{id:'light',n:'LED განათების მონტაჟი'}];
+const STYLES=[{id:'flat',n:'გლუვი'},{id:'shaker',n:'ჩარჩოიანი'},{id:'gola',n:'GOLA პროფილი'}];
+const HANDLES=[{id:'bar',n:'ბარი'},{id:'knob',n:'ღილაკი'}];
+const HCOLORS=[{id:'black',n:'შავი',hex:'#1b1b1b',metal:.4},{id:'steel',n:'ფოლადი',hex:'#b9bcbd',metal:.9},{id:'brass',n:'სპილენძისფერი',hex:'#b38b4d',metal:.85}];
+/* AGT catalog: LAM decors, 3P PET panels; paint = any RAL/NCS */
+const COLORS=[
+  {id:'L001',c:'L001',n:'White',hex:'#E3E4E3',g:'lam'},{id:'L002',c:'L002',n:'Bianco',hex:'#E6E2CF',g:'lam'},{id:'L170',c:'L170',n:'Mist White',hex:'#D2CFC7',g:'lam'},{id:'L169',c:'L169',n:'Smoky Blue',hex:'#354047',g:'lam'},{id:'L168',c:'L168',n:'Olive Stone',hex:'#2F3731',g:'lam'},{id:'L171',c:'L171',n:'Travertine Ivory',hex:'#B3ACA1',g:'lam'},{id:'L165',c:'L165',n:'Arden Oak',hex:'#DABB8D',wood:true,g:'lam'},{id:'L163',c:'L163',n:'Arkansas Oak',hex:'#CDA889',wood:true,g:'lam'},{id:'L161',c:'L161',n:'Toronto Oak',hex:'#8B7766',wood:true,g:'lam'},{id:'L160',c:'L160',n:'Costa Oak',hex:'#866846',wood:true,g:'lam'},{id:'L164',c:'L164',n:'Terra Oak',hex:'#6B482C',wood:true,g:'lam'},{id:'L162',c:'L162',n:'Denver Oak',hex:'#624D3D',wood:true,g:'lam'},{id:'L152',c:'L152',n:'Cappadocia Cream',hex:'#ADA9A7',g:'lam'},{id:'L144',c:'L144',n:'Saphire Grey',hex:'#BAB3A6',g:'lam'},{id:'L145',c:'L145',n:'Grand Beige',hex:'#A5988F',g:'lam'},{id:'L156',c:'L156',n:'Soft Touch Mint',hex:'#86948B',g:'lam'},{id:'L151',c:'L151',n:'Jazz Grey',hex:'#96999D',g:'lam'},{id:'L157',c:'L157',n:'Fossil Grey',hex:'#7C8071',g:'lam'},{id:'L004',c:'L004',n:'Anthracite',hex:'#5A5D5C',g:'lam'},{id:'L154',c:'L154',n:'Carbon Grey',hex:'#3F4242',g:'lam'},{id:'L146',c:'L146',n:'Dark Anthracite',hex:'#4A4854',g:'lam'},{id:'L155',c:'L155',n:'Lead Grey',hex:'#3F4043',g:'lam'},{id:'L003',c:'L003',n:'Black',hex:'#19181B',g:'lam'},{id:'L153',c:'L153',n:'Sepia Line',hex:'#B89068',wood:true,g:'lam'},{id:'L159',c:'L159',n:'Babylon Oak',hex:'#9A7851',wood:true,g:'lam'},{id:'L032',c:'L032',n:'German Oak',hex:'#B3A192',wood:true,g:'lam'},{id:'L020',c:'L020',n:'Tobacco',hex:'#694722',wood:true,g:'lam'},{id:'L031',c:'L031',n:'Light Walnut',hex:'#8A654A',wood:true,g:'lam'},{id:'L019',c:'L019',n:'Teak',hex:'#AD8A69',wood:true,g:'lam'},{id:'L030',c:'L030',n:'Bamboo',hex:'#BD8256',wood:true,g:'lam'},{id:'L143',c:'L143',n:'Giza',hex:'#AC8C6E',wood:true,g:'lam'},{id:'L051',c:'L051',n:'Corsico',hex:'#CC9054',wood:true,g:'lam'},{id:'L126',c:'L126',n:'Toscana',hex:'#BC996C',wood:true,g:'lam'},{id:'L133',c:'L133',n:'Pera',hex:'#A5865B',wood:true,g:'lam'},{id:'L053',c:'L053',n:'Montebello',hex:'#D2BCA5',wood:true,g:'lam'},{id:'L034',c:'L034',n:'Golden Oak',hex:'#C3A690',wood:true,g:'lam'},{id:'L158',c:'L158',n:'Marmara Rhythmic White',hex:'#DFDFDF',g:'lam'},{id:'L140',c:'L140',n:'Marmara Etra',hex:'#F3ECE1',g:'lam'},{id:'L138',c:'L138',n:'Marmara Grey',hex:'#C4BFB3',g:'lam'},{id:'L139',c:'L139',n:'Marmara Black',hex:'#343530',g:'lam'},{id:'L172',c:'L172',n:'Crossbrushed Metal',hex:'#8B8584',g:'lam'},
+  {id:'P3055',c:'3055',n:'Polar White',hex:'#FDFCFB',g:'pet'},{id:'P3054',c:'3054',n:'Latte Cream',hex:'#ECDABE',g:'pet'},{id:'P3053',c:'3053',n:'Vintage Beige',hex:'#CDC5B1',g:'pet'},{id:'P3052',c:'3052',n:'Comfort Grey',hex:'#999692',g:'pet'},{id:'P3051',c:'3051',n:'Caretta Green',hex:'#626D4B',g:'pet'},{id:'P3050',c:'3050',n:'Leaf Green',hex:'#485A52',g:'pet'},{id:'P3049',c:'3049',n:'Deep Blue',hex:'#323A48',g:'pet'},{id:'P3048',c:'3048',n:'Elite Grey',hex:'#434444',g:'pet'},{id:'P3047',c:'3047',n:'Night Black',hex:'#0E100F',g:'pet'},{id:'P3066',c:'3066',n:'Limba Light Grey',hex:'#C4C0B5',g:'pet'},{id:'P3061',c:'3061',n:'Timber Light',hex:'#C4B8A4',g:'pet'},{id:'P3071',c:'3071',n:'Timber Grey',hex:'#706A5F',g:'pet'},{id:'P3059',c:'3059',n:'Textile Light',hex:'#E6E2D9',g:'pet'},{id:'P3060',c:'3060',n:'Textile Vison',hex:'#A6A296',g:'pet'},{id:'P3064',c:'3064',n:'Croco Cream',hex:'#F0ECE5',g:'pet'},{id:'P3062',c:'3062',n:'Croco Blue',hex:'#BCBDBD',g:'pet'},{id:'P3063',c:'3063',n:'Croco Grey',hex:'#9B978F',g:'pet'},{id:'P3056',c:'3056',n:'Slate Cream',hex:'#D1C6B6',g:'pet'},{id:'P3069',c:'3069',n:'Slate Beige',hex:'#AC9D8D',g:'pet'},{id:'P3057',c:'3057',n:'Slate Grey',hex:'#42403A',g:'pet'},{id:'P3058',c:'3058',n:'Slate Coffee',hex:'#635D56',g:'pet'},
+  {id:'snow',c:'RAL 9010',n:'თეთრი',hex:'#F1F0EB',g:'paint'},{id:'cashmere',c:'',n:'კაშმირი',hex:'#D8CEBF',g:'paint'},{id:'sand',c:'',n:'ქვიშა',hex:'#C2B196',g:'paint'},{id:'sage',c:'',n:'სალბი',hex:'#98A48D',g:'paint'},{id:'olive',c:'',n:'ზეთისხილი',hex:'#5D6247',g:'paint'},{id:'petrol',c:'',n:'ნავთისფერი',hex:'#2E4A52',g:'paint'},{id:'clay',c:'',n:'თიხა',hex:'#9B5E46',g:'paint'},{id:'graphite',c:'',n:'გრაფიტი',hex:'#3A3D3E',g:'paint'},{id:'black',c:'',n:'შავი',hex:'#1C1C1C',g:'paint'},
+  {id:'T3105',c:'3105',n:'Mint Yeşil',hex:'#A9B9A6',g:'trendy'},
+  {id:'T3106',c:'3106',n:'Gece Mavi',hex:'#2B3442',g:'trendy'},
+  {id:'T729',c:'729',n:'Soft Touch Yeni Gri',hex:'#C1C2B5',g:'trendy'},
+  {id:'T732',c:'732',n:'Soft Touch Vizon',hex:'#A89276',g:'trendy'},
+  {id:'T3108',c:'3108',n:'İpek Gri',hex:'#B9B9B4',g:'trendy'},
+  {id:'T601',c:'601',n:'HG Beyaz',hex:'#EFF0EB',g:'trendy'},
+  {id:'T734',c:'734',n:'Soft Touch Beyaz',hex:'#F2F1EC',g:'trendy'},
+  {id:'T730',c:'730',n:'Soft Touch Krem',hex:'#EADEC5',g:'trendy'},
+  {id:'T739',c:'739',n:'Soft Touch Yellow',hex:'#F9BA13',g:'trendy'},
+  {id:'T738',c:'738',n:'Soft Touch Kiremit',hex:'#895746',g:'trendy'},
+  {id:'T728',c:'728',n:'Soft Touch Kaya Gri',hex:'#666867',g:'trendy'},
+  {id:'T647',c:'647',n:'Hg Bianco',hex:'#F1EBDF',g:'trendy'},
+  {id:'T605',c:'605',n:'Hg Krem',hex:'#DBCCC2',g:'trendy'},
+  {id:'T6008',c:'6008',n:'Hg Deluxe Gri',hex:'#BFBBB0',g:'trendy'},
+  {id:'T6021',c:'6021',n:'Hg Krom Gri',hex:'#919088',g:'trendy'},
+  {id:'T3109',c:'3109',n:'Grafit Gri',hex:'#4A4D4E',g:'trendy'},
+  {id:'T735',c:'735',n:'Soft Touch Su Yeşili',hex:'#89A8A1',g:'trendy'},
+  {id:'T736',c:'736',n:'Soft Touch Okyanus Mavi',hex:'#5F9FB6',g:'trendy'},
+  {id:'T740',c:'740',n:'Soft Touch Bej Gri',hex:'#6B6D5C',g:'trendy'},
+  {id:'T726',c:'726',n:'Soft Touch Gri',hex:'#454948',g:'trendy'},
+  {id:'T723',c:'723',n:'Soft Touch Siyah',hex:'#010202',g:'trendy'},
+  {id:'T623',c:'623',n:'Hg Vizon',hex:'#9F8E83',g:'trendy'},
+  {id:'T878',c:'878',n:'Hg Yeni Vizon',hex:'#958B80',g:'trendy'},
+  {id:'T6017',c:'6017',n:'Hg Cool Gri',hex:'#51565D',g:'trendy'},
+  {id:'T6022',c:'6022',n:'Hg Antrasit',hex:'#32302E',g:'trendy'},
+  {id:'T6002',c:'6002',n:'Hg Yeni Siyah',hex:'#231F20',g:'trendy'},
+  {id:'T391',c:'391',n:'Mat Stone Bej',hex:'#BFC0BB',g:'trendy'},
+  {id:'T390',c:'390',n:'Mat Stone Gri',hex:'#AFB4B8',g:'trendy'},
+  {id:'T3043',c:'3043',n:'Alaska Meşe',hex:'#ECEFEE',wood:true,g:'trendy'},
+  {id:'T3076',c:'3076',n:'Klasik Meşe',hex:'#DBBD8D',wood:true,g:'trendy'},
+  {id:'T3039',c:'3039',n:'Delphi Meşe',hex:'#D0A886',wood:true,g:'trendy'},
+  {id:'T3040',c:'3040',n:'Orlando Meşe',hex:'#A7A09D',wood:true,g:'trendy'},
+  {id:'T3078',c:'3078',n:'Freze Meşe',hex:'#8F7E6C',wood:true,g:'trendy'},
+  {id:'T3042',c:'3042',n:'Akra Meşe',hex:'#656158',wood:true,g:'trendy'},
+  {id:'T3041',c:'3041',n:'Peru Meşe',hex:'#876947',wood:true,g:'trendy'},
+  {id:'T3037',c:'3037',n:'Teksas Meşe',hex:'#634D3E',wood:true,g:'trendy'},
+  {id:'T3079',c:'3079',n:'Ahşap Meşe',hex:'#6E4B2E',wood:true,g:'trendy'},
+  {id:'T3077',c:'3077',n:'İsli Meşe',hex:'#4D4031',wood:true,g:'trendy'},
+  {id:'T3038',c:'3038',n:'Vermont Meşe',hex:'#433F36',wood:true,g:'trendy'},
+  {id:'T398',c:'398',n:'Super Mat Krem',hex:'#EFEADE',g:'trendy'},
+  {id:'T399',c:'399',n:'Mat Stüdyo Gri',hex:'#9EA1A0',g:'trendy'},
+  {id:'T6013',c:'6013',n:'Hg Light Grey',hex:'#F2F4EF',g:'trendy'},
+  {id:'T6016',c:'6016',n:'Hg Onyx Gri',hex:'#B5B9B6',g:'trendy'},
+  {id:'T6015',c:'6015',n:'Hg Elmas Gri',hex:'#716960',g:'trendy'},
+  {id:'T6020',c:'6020',n:'Hg Trend Gri',hex:'#C9CBC9',g:'trendy'},
+  {id:'T6018',c:'6018',n:'Hg Toros Beyaz Mermer',hex:'#EEEAE2',g:'trendy'},
+  {id:'T6019',c:'6019',n:'Hg Toros Siyah Mermer',hex:'#1E1E1E',g:'trendy'},
+  {id:'T6007',c:'6007',n:'Hg Efes Beyaz',hex:'#F1EFEA',g:'trendy'},
+  {id:'T627',c:'627',n:'Hg Milano Ceviz',hex:'#A5744A',wood:true,g:'trendy'},
+  {id:'T394',c:'394',n:'Picasso İnoks',hex:'#5C584F',g:'trendy'},
+  {id:'T395',c:'395',n:'Picasso Gold',hex:'#866A37',g:'trendy'},
+  {id:'T3006',c:'3006',n:'Süper Mat Galaksi',hex:'#E2E5E4',g:'trendy'},
+  {id:'T383',c:'383',n:'Mat Kaşmir Beyaz',hex:'#F3F7F2',g:'trendy'},
+  {id:'T385',c:'385',n:'Mat Kaşmir Krem',hex:'#EBE5D2',g:'trendy'},
+  {id:'T3032',c:'3032',n:'Mat Stone Loft',hex:'#77786F',g:'trendy'},
+  {id:'T397',c:'397',n:'Natural Touch Meşe',hex:'#B49573',wood:true,g:'trendy'},
+  {id:'T699',c:'699',n:'Hg Metalik Beyaz',hex:'#E0DFD0',g:'trendy'},
+  {id:'T670',c:'670',n:'Hg Galaksi Beyaz',hex:'#EEF0F0',g:'trendy'},
+  {id:'T678',c:'678',n:'Hg Galaksi Krem',hex:'#EAE3D1',g:'trendy'},
+  {id:'T640',c:'640',n:'Hg Galaksi Balbuğu',hex:'#927C65',g:'trendy'},
+  {id:'T608',c:'608',n:'Hg Metalik Antrasit',hex:'#3F3F3F',g:'trendy'},
+  {id:'T3098',c:'3098',n:'Stone Vizon',hex:'#B0A393',g:'trendy'},
+  {id:'T3099',c:'3099',n:'Nordic Meşe',hex:'#C2A27E',wood:true,g:'trendy'},
+  {id:'T3075',c:'3075',n:'Tokyo Beyaz',hex:'#EFEBE6',g:'trendy'},
+  {id:'T3074',c:'3074',n:'Tokyo Gri',hex:'#B5B1A5',g:'trendy'},
+  {id:'T737',c:'737',n:'Soft Touch Siena',hex:'#65503B',wood:true,g:'trendy'},
+  {id:'T388',c:'388',n:'Soft Touch Siena Ahşap',hex:'#957F68',wood:true,g:'trendy'},
+  {id:'T387',c:'387',n:'Mat Kaşmir Gri',hex:'#92918E',g:'trendy'},
+  {id:'T389',c:'389',n:'Toledo Koyu Ahşap',hex:'#645B54',wood:true,g:'trendy'},
+  {id:'T3081',c:'3081',n:'Arduaz',hex:'#0F0F18',g:'trendy'},
+  {id:'S3096',c:'3096',n:'Havana Kahve',hex:'#6D5E4C',g:'supra'},
+  {id:'S3093',c:'3093',n:'Ihlamur',hex:'#787C60',g:'supra'},
+  {id:'S3097',c:'3097',n:'Zeytin Yeşili',hex:'#687053',g:'supra'},
+  {id:'S3092',c:'3092',n:'Tobac',hex:'#895233',g:'supra'},
+  {id:'S3091',c:'3091',n:'Gökyüzü Mavi',hex:'#39424C',g:'supra'},
+  {id:'S3012',c:'3012',n:'Kar Beyaz',hex:'#F5F4EF',g:'supra'},
+  {id:'S3028',c:'3028',n:'İnci Beyaz',hex:'#EEECE6',g:'supra'},
+  {id:'S3018',c:'3018',n:'Moonlight',hex:'#F4F4F3',g:'supra'},
+  {id:'S3019',c:'3019',n:'Sahara Krem',hex:'#D1CBBB',g:'supra'},
+  {id:'S3013',c:'3013',n:'Meltem Bej',hex:'#C1BAA6',g:'supra'},
+  {id:'S3020',c:'3020',n:'Safari Gri',hex:'#A39A86',g:'supra'},
+  {id:'S3016',c:'3016',n:'Pembe Papatya',hex:'#BE9D93',g:'supra'},
+  {id:'S3015',c:'3015',n:'Makaron Yeşil',hex:'#8D9893',g:'supra'},
+  {id:'S3021',c:'3021',n:'Buz Gri',hex:'#CBCEC7',g:'supra'},
+  {id:'S3017',c:'3017',n:'Timeless Grey',hex:'#97988F',g:'supra'},
+  {id:'S3027',c:'3027',n:'Orman Yeşili',hex:'#45554D',g:'supra'},
+  {id:'S3029',c:'3029',n:'Pasifik',hex:'#163F49',g:'supra'},
+  {id:'S3011',c:'3011',n:'Londra Mavi',hex:'#112334',g:'supra'},
+  {id:'S3026',c:'3026',n:'Rustic Red',hex:'#4C2225',g:'supra'},
+  {id:'S3025',c:'3025',n:'Bitter',hex:'#312523',g:'supra'},
+  {id:'S3014',c:'3014',n:'Bulutlu Gri',hex:'#424443',g:'supra'},
+  {id:'S3024',c:'3024',n:'Pebble Grey',hex:'#6D6E6E',g:'supra'},
+  {id:'S3022',c:'3022',n:'Royal Gri',hex:'#5E5E5C',g:'supra'},
+  {id:'S3023',c:'3023',n:'Yunus Gri',hex:'#484846',g:'supra'},
+  {id:'S3010',c:'3010',n:'İnci Siyah',hex:'#030303',g:'supra'},
+  {id:'S3095',c:'3095',n:'Victoria Gri',hex:'#D2D1CC',g:'supra'}
+];
+const FLOORS=[
+  {id:'base',c:'',n:'ღია მუხა',hex:'#C9A77A',wood:true},
+  {id:'PRK310',c:'PRK310',n:'Armonia',hex:'#A5967E',wood:true},
+  {id:'PRK308',c:'PRK308',n:'Armonia',hex:'#A08776',wood:true},
+  {id:'PRK301',c:'PRK301',n:'Armonia',hex:'#BDA992',wood:true},
+  {id:'PRK002',c:'PRK002',n:'Natura Select',hex:'#D4CEC5',wood:true},
+  {id:'PRK202',c:'PRK202',n:'Natura Select',hex:'#CAC5BA',wood:true},
+  {id:'PRK006',c:'PRK006',n:'Natura Select',hex:'#D8D4C8',wood:true},
+  {id:'PRK1109',c:'PRK1109',n:'Natura Select',hex:'#BCBEB8',wood:true},
+  {id:'PRK206',c:'PRK206',n:'Natura Select',hex:'#A5A090',wood:true},
+  {id:'PRK204',c:'PRK204',n:'Natura Select',hex:'#7F7158',wood:true},
+  {id:'PRK230',c:'PRK230',n:'Natura Select',hex:'#B48A5F',wood:true},
+  {id:'PRK1016',c:'PRK1016',n:'Mood XL',hex:'#9E958E',wood:true},
+  {id:'PRK1012',c:'PRK1012',n:'Mood XL',hex:'#746D6C',wood:true},
+  {id:'PRK1004',c:'PRK1004',n:'Mood XL',hex:'#DADBD8',wood:true},
+  {id:'PRK609',c:'PRK609',n:'Concept Neo',hex:'#B4A07B',wood:true},
+  {id:'PRK601',c:'PRK601',n:'Concept Neo',hex:'#C7C3BA',wood:true},
+  {id:'PRK603',c:'PRK603',n:'Concept Neo',hex:'#937D66',wood:true},
+  {id:'PRK903',c:'PRK903',n:'Effect',hex:'#B0ACA3',wood:true},
+  {id:'PRK904',c:'PRK904',n:'Effect',hex:'#EFE9DC',wood:true},
+  {id:'PRK914',c:'PRK914',n:'Effect',hex:'#BFBBAC',wood:true},
+  {id:'PRK902',c:'PRK902',n:'Effect',hex:'#B7A88C',wood:true},
+  {id:'PRK913',c:'PRK913',n:'Effect',hex:'#B99A78',wood:true},
+  {id:'PRK932',c:'PRK932',n:'Marco Polo',hex:'#B4B0AA',wood:true},
+  {id:'PRK922',c:'PRK922',n:'Marco Polo',hex:'#AD9A87',wood:true},
+  {id:'PRK502',c:'PRK502',n:'Natura Line',hex:'#CBC4B3',wood:true},
+  {id:'PRK503',c:'PRK503',n:'Natura Line',hex:'#C9C2AE',wood:true},
+  {id:'PRK231',c:'PRK231',n:'Natura Line',hex:'#C2B3A1',wood:true},
+  {id:'PRK507',c:'PRK507',n:'Natura Line',hex:'#A88E70',wood:true},
+  {id:'PRK809',c:'PRK809',n:'Corvina',hex:'#BCB4AB',wood:true},
+  {id:'PRK805',c:'PRK805',n:'Corvina',hex:'#9C816D',wood:true},
+  {id:'PRK804',c:'PRK804',n:'Corvina',hex:'#967D5B',wood:true},
+  {id:'PRK807',c:'PRK807',n:'Corvina',hex:'#928D7E',wood:true},
+  {id:'PRK111',c:'PRK111',n:'Bella Neo',hex:'#B8BBC5',wood:true},
+  {id:'PRK1110',c:'PRK1110',n:'Bella Neo',hex:'#D1CFC3',wood:true},
+  {id:'PRK102',c:'PRK102',n:'Bella Neo',hex:'#D8CCB1',wood:true},
+  {id:'PRK107',c:'PRK107',n:'Bella Neo',hex:'#C7C2B8',wood:true},
+  {id:'PRK114',c:'PRK114',n:'Luna',hex:'#C1BDB1',wood:true}
+];
+const colorsFor=m=>COLORS.filter(c=>c.g===m);
+const cName=c=>(c.c?c.c+' ':'')+c.n;
+const TOPS=[{id:'quartz',n:'თეთრი კვარცი',hex:'#E9E7E2'},{id:'concrete',n:'ბეტონი',hex:'#9A9893'},{id:'granite',n:'შავი გრანიტი',hex:'#262626'},{id:'oak',n:'მუხის მასივი',hex:'#B58E5B',wood:true}];
+const STEP_NAMES=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტურა','დეტალირება','რასკროი'];
+const LAST=STEP_NAMES.length-1;
+const DEFAULTS={type:'kitchen',w:3000,h:2400,d:600,n:5,upper:true,mirror:true,material:'lam',style:'flat',handle:'bar',hcolor:'black',front:'L156',body:'L001',top:'quartz',floor:'base',hw:'std',soft:true,lift:false,svc:['measure','delivery','install'],
+  client:'',phone:'',address:'',note:''};
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+function normalize(){if(!MATERIALS.some(m=>m.id===S.material))S.material='lam';const fl=colorsFor(S.material);if(!fl.some(c=>c.id===S.front))S.front=(POP[S.material]||[fl[0].id])[0];if(!colorsFor('lam').some(c=>c.id===S.body))S.body='L001';delete S.sheet;if(!HWT.some(h=>h.id===S.hw))S.hw='std';if(!Array.isArray(S.svc))S.svc=[];if(!FLOORS.some(f=>f.id===S.floor))S.floor='base';}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function autoN(st){return st.type==='kitchen'?Math.max(2,Math.round(st.w/600)):st.type==='wardrobe'?Math.min(8,Math.max(1,Math.round(st.w/500))):1;}
+function nRange(){return S.type==='kitchen'?[2,8]:S.type==='wardrobe'?[1,8]:[1,1];}
+
+let S=JSON.parse(JSON.stringify(DEFAULTS));
+let step=0,curId=null,dirty=false,lastSaved=null;
+
+/* ---------- three.js scene ---------- */
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#D9DBD6');
+const camera=new THREE.PerspectiveCamera(38,1,.05,60);
+scene.add(new THREE.HemisphereLight(0xffffff,0x8a8070,.62));
+const sun=new THREE.DirectionalLight(0xfff1e2,1.05);
+sun.position.set(2.6,4.2,4.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-1,near:.5,far:14});
+sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;scene.add(sun);
+const fillL=new THREE.DirectionalLight(0xdfe8ff,.32);fillL.position.set(-4,2,3);scene.add(fillL);
+
+function woodTexture(hex,vertical){
+  const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');
+  g.fillStyle=hex;g.fillRect(0,0,512,512);
+  let seed=hex.length*97+parseInt(hex.slice(1),16)%1000;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+  for(let i=0;i<220;i++){
+    const p=rnd()*512,dark=rnd()<.5;
+    g.strokeStyle=dark?`rgba(40,22,8,${.04+rnd()*.12})`:`rgba(255,240,215,${.03+rnd()*.08})`;
+    g.lineWidth=.6+rnd()*2.4;g.beginPath();
+    for(let t=0;t<=512;t+=16){const o=Math.sin(t/(60+rnd()*20)+p)*3;vertical?(t?g.lineTo(p+o,t):g.moveTo(p+o,t)):(t?g.lineTo(t,p+o):g.moveTo(t,p+o));}
+    g.stroke();
+  }
+  const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;return tx;
+}
+function floorTexture(hex){
+  const c=document.createElement('canvas');c.width=c.height=1024;const g=c.getContext('2d');
+  g.fillStyle=hex;g.fillRect(0,0,1024,1024);
+  const ph=128;
+  for(let r=0;r<1024/ph;r++){
+    const off=(r*337)%1024;
+    for(let k=-1;k<3;k++){const x=off+k*520;g.fillStyle=`rgba(0,0,0,${(r*7+k*3)%5*.018})`;g.fillRect(x,r*ph,520,ph);g.fillStyle='rgba(30,18,8,.35)';g.fillRect(x,r*ph,2,ph);}
+    g.fillStyle='rgba(30,18,8,.35)';g.fillRect(0,r*ph,1024,2);
+  }
+  const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(3,3);tx.anisotropy=8;return tx;
+}
+const matCache={};
+function surf(c,rough,vertical){
+  const key=c.id+'|'+rough+'|'+(vertical?1:0);
+  if(matCache[key])return matCache[key];
+  const m=c.wood?new THREE.MeshStandardMaterial({map:woodTexture(c.hex,vertical),roughness:Math.max(rough,.5)})
+               :new THREE.MeshStandardMaterial({color:new THREE.Color(c.hex).convertSRGBToLinear(),roughness:rough});
+  return matCache[key]=m;
+}
+function flat(hex,rough,metal,emissive){
+  const key='f'+hex+rough+metal+(emissive||'');
+  if(matCache[key])return matCache[key];
+  const m=new THREE.MeshStandardMaterial({color:new THREE.Color(hex).convertSRGBToLinear(),roughness:rough,metalness:metal||0});
+  if(emissive){m.emissive=new THREE.Color(emissive);m.emissiveIntensity=1;}
+  return matCache[key]=m;
+}
+const wallMat=new THREE.MeshStandardMaterial({roughness:.95,color:new THREE.Color('#ECEAE5').convertSRGBToLinear()});
+const wall=new THREE.Mesh(new THREE.PlaneGeometry(14,5),wallMat);wall.position.set(0,2.5,0);wall.receiveShadow=true;scene.add(wall);
+const floorMat=new THREE.MeshStandardMaterial({roughness:.7});const floorTex={};
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,9),floorMat);floor.rotation.x=-Math.PI/2;floor.position.set(0,0,4.5);floor.receiveShadow=true;scene.add(floor);
+
+function depthMm(){return S.type==='kitchen'?600:S.type==='wardrobe'?S.d:460;}
+function heightMm(){return S.type==='kitchen'?(S.upper?2170:860):S.type==='wardrobe'?S.h:(S.mirror?2020:850);}
+
+let furniture=null;
+function build(){
+  if(furniture){scene.remove(furniture);furniture.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+  const G=new THREE.Group();furniture=G;
+  const mat=byId(MATERIALS,S.material);
+  const fc=byId(COLORS,S.front),bc=byId(COLORS,S.body),hc=byId(HCOLORS,S.hcolor);
+  const frontMatV=surf(fc,mat.rough,true),frontMatH=surf(fc,mat.rough,false);
+  const bodyMat=surf(bc,.6,true);
+  const handleMat=flat(hc.hex,.35,hc.metal);
+  const groove=flat('#151515',.6,.3);
+  const W=S.w/1000,n=S.n;
+  function box(w,h,d,m,x,y,z){const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=me.receiveShadow=true;G.add(me);return me;}
+  function front(w,h,x,y,zf,o){
+    const t=.019,m=o.horiz?frontMatH:frontMatV;
+    if(S.style==='shaker'){
+      const f=Math.min(.07,w*.17,h*.17);
+      box(w,f,t,m,x,y+h/2-f/2,zf+t/2);box(w,f,t,m,x,y-h/2+f/2,zf+t/2);
+      box(f,h-2*f,t,m,x-w/2+f/2,y,zf+t/2);box(f,h-2*f,t,m,x+w/2-f/2,y,zf+t/2);
+      box(w-2*f,h-2*f,t*.5,m,x,y,zf+t*.25);
+    }else box(w,h,t,m,x,y,zf+t/2);
+    if(S.style==='gola'){box(w,.022,.002,groove,x,o.grooveBottom?y-h/2+.012:y+h/2-.012,zf+t+.001);return;}
+    const hx=x+(o.hx||0),hy=y+(o.hy||0),hz=zf+t;
+    if(S.handle==='knob'){
+      const k=new THREE.Mesh(new THREE.CylinderGeometry(.014,.011,.03,20),handleMat);k.rotation.x=Math.PI/2;k.position.set(hx,hy,hz+.015);k.castShadow=true;G.add(k);
+    }else{
+      const L=o.len||.16;
+      if(o.horiz){box(L,.012,.012,handleMat,hx,hy,hz+.026);}
+      else{box(.012,L,.012,handleMat,hx,hy,hz+.026);}
+    }
+  }
+  const gap=.002;
+  if(S.type==='kitchen'){
+    const D=.6,cw=W/n,top=byId(TOPS,S.top);
+    const topMat=top.wood?surf(top,.55,false):flat(top.hex,top.id==='granite'?.25:.45);
+    box(W,.1,D-.08,flat('#2a2b2b',.8),0,.05,(D-.08)/2);
+    box(W,.72,D-.04,bodyMat,0,.46,(D-.04)/2);
+    box(W+.01,.04,D+.01,topMat,0,.84,(D+.01)/2);
+    const drawerIdx=Math.min(1,n-1),sinkIdx=n-1-(n>2?1:0);
+    for(let i=0;i<n;i++){
+      const x=-W/2+cw*i+cw/2;
+      if(i===drawerIdx){
+        const hs=[.18,.27,.27];let yt=.82;
+        hs.forEach(h=>{front(cw-gap*2,h-gap*2,x,yt-h/2,D-.04,{horiz:true,hy:h/2-.05,len:Math.min(.3,cw*.5)});yt-=h;});
+      }else{
+        const doors=cw>.6?2:1,dw=cw/doors;
+        for(let k=0;k<doors;k++){const dx=x-cw/2+dw*k+dw/2,side=doors===2?(k?-1:1):(i%2?-1:1);front(dw-gap*2,.72-gap*2,dx,.46,D-.04,{hx:side*(dw/2-.04),hy:.25});}
+      }
+    }
+    box(Math.min(.58,cw*.92),.006,.5,flat('#0f0f10',.12,.2),-W/2+cw*drawerIdx+cw/2,.863,D/2);
+    if(sinkIdx!==drawerIdx){
+      const sx=-W/2+cw*sinkIdx+cw/2;
+      box(cw*.72,.004,.42,flat('#8d9092',.25,.9),sx,.861,D/2+.02);
+      const tap=new THREE.Mesh(new THREE.CylinderGeometry(.014,.016,.28,16),handleMat);tap.position.set(sx,1,.1);G.add(tap);
+    }
+    if(S.upper){
+      const Du=.32,yb=1.45,Hu=.72;
+      box(W,Hu,Du-.02,bodyMat,0,yb+Hu/2,(Du-.02)/2);
+      for(let i=0;i<n;i++){
+        const x=-W/2+cw*i+cw/2,doors=S.lift?1:(cw>.6?2:1),dw=cw/doors;
+        for(let k=0;k<doors;k++){const dx=x-cw/2+dw*k+dw/2,side=doors===2?(k?-1:1):(i%2?-1:1);front(dw-gap*2,Hu-gap*2,dx,yb+Hu/2,Du-.02,{hx:side*(dw/2-.04),hy:-Hu/2+.11,grooveBottom:true});}
+      }
+      box(W-.04,.008,.02,flat('#fff7e0',.5,0,'#fff2cc'),0,yb-.006,Du-.06);
+    }
+  }else if(S.type==='wardrobe'){
+    const H=S.h/1000,D=S.d/1000,cw=W/n,pl=.08;
+    box(W-.02,pl,D-.06,bodyMat,0,pl/2,(D-.06)/2);
+    box(W,H-pl,D-.02,bodyMat,0,pl+(H-pl)/2,(D-.02)/2);
+    for(let i=0;i<n;i++){
+      const x=-W/2+cw*i+cw/2,side=(i%2===0&&i<n-1)?1:-1;
+      front(cw-gap*2,H-pl-gap*2,x,pl+(H-pl)/2,D-.02,{hx:side*(cw/2-.04),hy:1.05-(pl+(H-pl)/2),len:.42});
+    }
+  }else{
+    const yb=.35,Hv=.5,D=.46;
+    box(W,Hv,D-.02,bodyMat,0,yb+Hv/2,(D-.02)/2);
+    const hs=[.2,.3];let yt=yb+Hv;
+    hs.forEach(h=>{front(W-gap*2,h-gap*2,0,yt-h/2,D-.02,{horiz:true,hy:h/2-.06,len:Math.min(.34,W*.4)});yt-=h;});
+    box(W+.01,.05,D+.01,flat('#f7f7f5',.18),0,yb+Hv+.025,(D+.01)/2);
+    const tap=new THREE.Mesh(new THREE.CylinderGeometry(.012,.014,.16,16),handleMat);tap.position.set(0,yb+Hv+.13,.07);G.add(tap);
+    if(S.mirror){const mw=Math.min(W*.9,1.1);box(mw+.02,.82,.02,flat('#2a2b2b',.5),0,1.62,.01);box(mw,.8,.005,flat('#cfd8dc',.06,.55),0,1.62,.023);}
+  }
+  scene.add(G);
+  const fl=byId(FLOORS,S.floor)||FLOORS[0];floorMat.map=floorTex[fl.id]||(floorTex[fl.id]=floorTexture(fl.hex));floorMat.needsUpdate=true;
+  document.getElementById('dims').innerHTML=`<small>სიგანე × სიმაღლე × სიღრმე</small>${S.w} × ${heightMm()} × ${depthMm()} მმ`;
+  fitCamera(false);
+}
+
+/* ---------- camera ---------- */
+const cam={theta:-.55,phi:1.22,r:4,tTheta:-.55,tPhi:1.22,tR:4,target:new THREE.Vector3(),tTarget:new THREE.Vector3()};
+let view='angle';
+function fitCamera(snap){
+  const H=heightMm()/1000,W=S.w/1000,span=Math.max(W*1.05,H*1.35);
+  cam.tTarget.set(0,S.type==='vanity'?(S.mirror?1.05:.6):H/2,.3);
+  const base=span/(2*Math.tan(THREE.MathUtils.degToRad(19)))/Math.min(1.35,Math.max(.75,camera.aspect))+.8;
+  if(view==='front'){cam.tTheta=0;cam.tPhi=1.5;cam.tR=base;}
+  else if(view==='close'){cam.tTheta=.35;cam.tPhi=1.3;cam.tR=base*.62;cam.tTarget.y=S.type==='wardrobe'?1.05:.85;}
+  else if(view==='angle'){cam.tTheta=-.55;cam.tPhi=1.22;cam.tR=base*1.05;}
+  if(snap){cam.theta=cam.tTheta;cam.phi=cam.tPhi;cam.r=cam.tR;cam.target.copy(cam.tTarget);}
+}
+const ptrs=new Map();let pinch0=0,r0=0;
+const cv=renderer.domElement;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){const p=[...ptrs.values()];pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);r0=cam.tR;}});
+cv.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===1){cam.tTheta=THREE.MathUtils.clamp(cam.tTheta-(e.clientX-prev.x)*.006,-1.3,1.3);cam.tPhi=THREE.MathUtils.clamp(cam.tPhi-(e.clientY-prev.y)*.005,.55,1.56);setView(null);}
+  else if(ptrs.size===2){const p=[...ptrs.values()];const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch0)cam.tR=THREE.MathUtils.clamp(r0*pinch0/d,1.2,12);}
+});
+const up=e=>{ptrs.delete(e.pointerId);pinch0=0;};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();cam.tR=THREE.MathUtils.clamp(cam.tR*(1+e.deltaY*.001),1.2,12);},{passive:false});
+function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
+new ResizeObserver(()=>{resize();fitCamera(false);}).observe(stage);
+resize();
+function loop(){
+  const k=.1;
+  cam.theta+=(cam.tTheta-cam.theta)*k;cam.phi+=(cam.tPhi-cam.phi)*k;cam.r+=(cam.tR-cam.r)*k;cam.target.lerp(cam.tTarget,k);
+  camera.position.set(cam.target.x+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta),cam.target.y+cam.r*Math.cos(cam.phi),cam.target.z+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta));
+  camera.lookAt(cam.target);renderer.render(scene,camera);requestAnimationFrame(loop);
+}
+
+/* ---------- cut list (all sizes mm, board 18 mm) ---------- */
+function hingesFor(h){return h<=900?2:h<=1600?3:h<=2000?4:5;}
+function splitW(W,n){const b=Math.floor(W/n),a=[];for(let i=0;i<n;i++)a.push(i<n-1?b:W-b*(n-1));return a;}
+function calc(){
+  const t=18,P=[],HW={};
+  const HT=byId(HWT,S.hw),hinge=S.hw==='eco'&&!S.soft?'ანჯამა ჩვეულებრივი (ეკონომი)':HT.hinge,drw=HT.drawer;
+  const fm=byId(MATERIALS,S.material),bodyC=cName(byId(COLORS,S.body)),frontC=cName(byId(COLORS,S.front));
+  const hw=(k,q)=>{if(q>0)HW[k]=(HW[k]||0)+q;};
+  // e = number of long/short edges banded with 2 mm PVC: [long, short]
+  const add=(grp,name,L,Wd,q,mat,e)=>{L=Math.round(L);Wd=Math.round(Wd);const a=Math.max(L,Wd),b=Math.min(L,Wd);P.push({grp,name,L:a,W:b,q,mat,e:e||[0,0]});};
+  const bodyM='AGT LAM 18 · '+bodyC;
+  const frontM=fm.n+' · '+frontC;
+  const fe=S.material==='paint'?[0,0]:[2,2];
+  const handle=n=>{if(S.style==='gola')return;hw('სახელური ('+byId(HANDLES,S.handle).n+', '+byId(HCOLORS,S.hcolor).n+')',n);};
+  const doorsOf=w=>w>600?2:1;
+  if(S.type==='kitchen'){
+    const mods=splitW(S.w,S.n),drawerIdx=Math.min(1,S.n-1),sinkIdx=S.n-1-(S.n>2?1:0);
+    mods.forEach((w,i)=>{
+      const g='ქვედა მოდული '+(i+1)+' · '+w+(i===drawerIdx?' (უჯრები)':i===sinkIdx?' (ნიჟარა)':'');
+      add(g,'გვერდი',720,560,2,'body',[1,0]);
+      add(g,'ძირი',w-2*t,560,1,'body',[1,0]);
+      add(g,'ზედა ლენტი',w-2*t,100,2,'body');
+      add(g,'უკანა კედელი',w-4,716,1,'hdf');
+      if(i===drawerIdx){
+        [176,268,268].forEach(h=>add(g,'უჯრის ფასადი',w-4,h-4,1,'front',fe));
+        hw(drw+' 500 მმ',3);handle(3);
+      }else{
+        const d=doorsOf(w),dw=Math.round(w/d-4);
+        if(i!==sinkIdx){add(g,'თარო',w-2*t-2,520,1,'body',[1,0]);hw('თაროს საყრდენი',4);}
+        add(g,'კარი',716,dw,d,'front',fe);hw(hinge,2*d);handle(d);
+      }
+      hw('ფეხი (რეგულირებადი)',4);
+    });
+    {const pc=Math.ceil(S.w/2700),pw=Math.ceil(S.w/pc);add('ცოკოლი','ცოკოლი'+(pc>1?' (ნაწილი)':''),pw,100,pc,'body',[1,0]);}
+    if(S.upper){
+      mods.forEach((w,i)=>{
+        const g='ზედა მოდული '+(i+1)+' · '+w;
+        add(g,'გვერდი',720,300,2,'body',[1,0]);
+        add(g,'ძირი / სახურავი',w-2*t,300,2,'body',[1,0]);
+        add(g,'თარო',w-2*t-2,280,1,'body',[1,0]);hw('თაროს საყრდენი',4);
+        add(g,'უკანა კედელი',w-4,716,1,'hdf');
+        const d=doorsOf(w),dw=Math.round(w/d-4);
+        if(S.lift){add(g,'ამწევი კარი',716,w-4,1,'front',fe);hw(HT.lift,1);handle(1);}
+        else{add(g,'კარი',716,dw,d,'front',fe);hw(hinge,2*d);handle(d);}
+        hw('ზედა კარადის საკიდი',2);
+      });
+    }
+    hw('სამუშაო ზედაპირი 600 მმ, '+byId(TOPS,S.top).n+' (მ)',Math.ceil(S.w/100)/10);
+  }else if(S.type==='wardrobe'){
+    const W=S.w,H=S.h,D=S.d,n=S.n,pl=80,g='კორპუსი';
+    add(g,'გვერდი',H,D,2,'body',[1,0]);
+    add(g,'სახურავი / ძირი',W-2*t,D,2,'body',[1,0]);
+    add(g,'ცოკოლი',W-2*t,pl,2,'body',[1,0]);
+    if(n>1)add(g,'შუა ტიხარი',H-pl-2*t,D-20,n-1,'body',[1,0]);
+    add(g,'უკანა კედელი',W-4,H-4,1,'hdf');
+    const iw=Math.round((W-2*t-(n-1)*t)/n);
+    let rods=0,shelves=0;
+    for(let i=0;i<n;i++){
+      if(i%2===0){add('შიგთავსი','ქუდის თარო',iw-2,D-40,1,'body',[1,0]);shelves++;rods++;}
+      else{add('შიგთავსი','თარო',iw-2,D-40,4,'body',[1,0]);shelves+=4;}
+    }
+    hw('თაროს საყრდენი',shelves*4);
+    if(rods)hw('საკიდის ძელი (მმ)',rods*(iw-2));if(rods)hw('ძელის სამაგრი',rods*2);
+    const dh=H-pl-4,dw=Math.round(W/n-4);
+    add('ფასადები','კარი',dh,dw,n,'front',fe);
+    hw(hinge,n*hingesFor(dh));handle(n);
+  }else{
+    const W=S.w,g='ტუმბო';
+    add(g,'გვერდი',500,440,2,'body',[1,0]);
+    add(g,'ძირი',W-2*t,440,1,'body',[1,0]);
+    add(g,'ზედა ლენტი',W-2*t,100,2,'body');
+    add(g,'უკანა კედელი',W-4,496,1,'hdf');
+    [196,296].forEach(h=>add('ფასადები','უჯრის ფასადი',W-4,h-4,1,'front',fe));
+    hw(drw+' 400 მმ',2);hw('კედლის საკიდი',2);handle(2);
+    hw('ნიჟარა-ზედაპირი '+W+' მმ',1);
+    if(S.mirror)hw('სარკე '+Math.min(Math.round(W*.9),1100)+'×800 მმ',1);
+  }
+  // merge identical parts inside each group
+  const rows=[];P.forEach(p=>{const r=rows.find(x=>x.grp===p.grp&&x.name===p.name&&x.L===p.L&&x.W===p.W&&x.mat===p.mat);if(r)r.q+=p.q;else rows.push(Object.assign({},p));});
+  let aBody=0,aFront=0,aHdf=0,edge=0,cnt=0;
+  rows.forEach(r=>{const a=r.L*r.W*r.q/1e6;if(r.mat==='body')aBody+=a;else if(r.mat==='front')aFront+=a;else aHdf+=a;edge+=(r.e[0]*r.L+r.e[1]*r.W)*r.q/1000;cnt+=r.q;r.matName=r.mat==='body'?bodyM:r.mat==='front'?frontM:'HDF 3 მმ';});
+  const sheetsBody=Math.ceil(aBody*1.2/(2.8*2.1)), sheetsFront=Math.ceil(aFront*1.2/fm.a);
+  const RES={rows,HW,aBody,aFront,aHdf,edge:Math.ceil(edge*1.1),cnt,sheetsBody,sheetsFront,sheetsHdf:Math.ceil(aHdf*1.1/(2.8*2.07)),bodyM,frontM};
+  const plan=cutPlan(RES);RES.plan=plan;
+  plan.forEach(pl=>{const n=pl.sheets.length;if(pl.key==='body')RES.sheetsBody=n;if(pl.key==='front')RES.sheetsFront=n;if(pl.key==='hdf')RES.sheetsHdf=n;});
+  return RES;
+}
+/* guillotine nesting: kerf 4 mm, 10 mm trim; sheet length along x */
+const KERF=4,TRIM=10;
+function nest(parts,SW,SH,rot){
+  const W0=SW-2*TRIM,H0=SH-2*TRIM,sheets=[],over=[];
+  const list=parts.slice().sort((a,b)=>Math.max(b.L,b.W)-Math.max(a.L,a.W)||b.L*b.W-a.L*a.W);
+  for(const p of list){
+    const opts=[[p.L,p.W,false]];if(rot&&p.L!==p.W)opts.push([p.W,p.L,true]);
+    if(!opts.some(([w,h])=>w<=W0&&h<=H0)){over.push(p);continue;}
+    let best=null;
+    sheets.forEach((sh,si)=>sh.free.forEach((f,fi)=>opts.forEach(([w,h,r])=>{const pw=w+KERF,ph=h+KERF;if(pw<=f.w+KERF&&ph<=f.h+KERF){const sc=f.w*f.h-pw*ph;if(!best||sc<best.sc)best={sc,si,fi,w,h,r};}})));
+    if(!best){sheets.push({free:[{x:0,y:0,w:W0,h:H0}],placed:[]});const si=sheets.length-1;const o=opts.find(([w,h])=>w<=W0&&h<=H0);best={si,fi:0,w:o[0],h:o[1],r:o[2]};}
+    const sh=sheets[best.si],f=sh.free[best.fi],pw=best.w+KERF,ph=best.h+KERF;
+    sh.placed.push({x:f.x,y:f.y,w:best.w,h:best.h,p,r:best.r});
+    const rw=f.w-pw,rh=f.h-ph;let A,B;
+    if(rw<rh){A={x:f.x+pw,y:f.y,w:rw,h:ph};B={x:f.x,y:f.y+ph,w:f.w,h:rh};}
+    else{A={x:f.x+pw,y:f.y,w:rw,h:f.h};B={x:f.x,y:f.y+ph,w:pw,h:rh};}
+    sh.free.splice(best.fi,1);[A,B].forEach(r=>{if(r.w>40&&r.h>40)sh.free.push(r);});
+  }
+  sheets.forEach(sh=>{sh.used=sh.placed.reduce((a,q)=>a+q.w*q.h,0)/(SW*SH);});
+  return {sheets,over,SW,SH};
+}
+function cutPlan(R){
+  const fm=byId(MATERIALS,S.material),fc=byId(COLORS,S.front),bc=byId(COLORS,S.body);
+  const groups={body:[],front:[],hdf:[]};
+  R.rows.forEach((r,i)=>{for(let k=0;k<r.q;k++)groups[r.mat].push({n:i+1,name:r.name,L:r.L,W:r.W});});
+  const out=[];
+  if(groups.body.length)out.push(Object.assign(nest(groups.body,2800,2100,!bc.wood),{key:'body',title:'კორპუსი · AGT LAM 18 · '+cName(bc),fill:bc.hex}));
+  if(groups.front.length){const sw=fm.id==='lam'||fm.id==='paint'?[2800,2100]:[2800,1220];out.push(Object.assign(nest(groups.front,sw[0],sw[1],!(fc.wood)),{key:'front',title:'ფასადი · '+fm.n+' · '+cName(fc),fill:fc.hex}));}
+  if(groups.hdf.length)out.push(Object.assign(nest(groups.hdf,2800,2070,true),{key:'hdf',title:'უკანა კედელი · HDF 3 მმ',fill:'#C9B79C'}));
+  return out;
+}
+function lum(hex){const n=parseInt(hex.slice(1),16);return ((n>>16)*299+((n>>8)&255)*587+(n&255)*114)/1000;}
+function sheetSvg(pl,sh,idx){
+  const lc=lum(pl.fill)>140?'#1D2321':'#F4F6F2';
+  const rects=sh.placed.map(q=>{const x=TRIM+q.x,y=TRIM+q.y,fs=Math.max(36,Math.min(110,Math.min(q.w,q.h)*.32));return `<g><rect x="${x}" y="${y}" width="${q.w}" height="${q.h}" fill="${pl.fill}" stroke="#1D2321" stroke-width="5"/><text x="${x+q.w/2}" y="${y+q.h/2}" fill="${lc}" font-size="${fs}" font-family="JetBrains Mono, monospace" text-anchor="middle" dominant-baseline="middle">${q.p.n}${q.r?'↻':''}</text>${q.w>420&&q.h>220?`<text x="${x+q.w/2}" y="${y+q.h/2+fs*.95}" fill="${lc}" font-size="${fs*.55}" font-family="JetBrains Mono, monospace" text-anchor="middle" dominant-baseline="middle">${q.p.L}×${q.p.W}</text>`:''}</g>`;}).join('');
+  return `<div class="cutsheet"><div class="cuthead"><b>ფილა ${idx+1} / ${pl.sheets.length}</b><span>${pl.SW}×${pl.SH} · გამოყენება ${Math.round(sh.used*100)}% · ${sh.placed.length} დეტ.</span></div><svg viewBox="0 0 ${pl.SW} ${pl.SH}" role="img" aria-label="ფილა ${idx+1}, ${sh.placed.length} დეტალი"><rect x="0" y="0" width="${pl.SW}" height="${pl.SH}" fill="#EEF0EC" stroke="#9AA19C" stroke-width="6"/>${rects}</svg></div>`;
+}
+function edgeTxt(e){if(!e[0]&&!e[1])return '—';if(e[0]===2&&e[1]===2)return 'ირგვლივ';const s=[];if(e[0])s.push(e[0]+' გრძ.');if(e[1])s.push(e[1]+' მოკლ.');return s.join(', ');}
+
+/* ---------- UI ---------- */
+const $sheet=document.getElementById('sheet'),$plist=document.getElementById('plist');
+const $c=document.getElementById('content'),$steps=document.getElementById('steps'),$main=document.getElementById('main');
+function seg(key,items,disabled){return `<div class="seg">${items.map(i=>`<button type="button" data-set="${key}" data-val="${i.id}" class="${S[key]===i.id?'on':''}" ${disabled&&disabled(i)?'disabled':''}>${i.n}${i.pop?'<span class="pop">★ პოპულარული</span>':''}${i.s?`<small>${i.s}</small>`:''}</button>`).join('')}</div>`;}
+const chipCache={};
+function chipStyle(c){return c.wood?`background-image:url(${woodTexture(c.hex,true).image.toDataURL('image/jpeg',.7)})`:`background:${c.hex}`;}
+const ui={all:{},q:{}};
+function picker(key,items,popIds){
+  const sel=items.find(c=>c.id===S[key]);let show;
+  if(ui.all[key]){const q=(ui.q[key]||'').toLowerCase();show=q?items.filter(c=>(c.c+' '+c.n).toLowerCase().includes(q)):items;}
+  else{show=popIds.map(id=>items.find(c=>c.id===id)).filter(Boolean);if(sel&&!show.includes(sel))show=[sel,...show];}
+  return `${ui.all[key]?`<div class="more"><input type="search" id="q-${key}" data-q="${key}" placeholder="ძებნა: კოდი ან სახელი" value="${esc(ui.q[key]||'')}"><button type="button" data-all="${key}">მხოლოდ პოპულარული</button></div>`:''}${swatches(key,show)}${ui.all[key]?'':`<div class="more"><button type="button" data-all="${key}">ყველა ფერი (${items.length}) ▾</button></div>`}`;
+}
+function swatches(key,items,disabled){return `<div class="swatches">${items.map(c=>{const st=chipCache[c.id+c.hex]||(chipCache[c.id+c.hex]=chipStyle(c));return `<button type="button" class="swatch ${S[key]===c.id?'on':''}" data-set="${key}" data-val="${c.id}" ${disabled&&disabled(c)?'disabled':''}><span class="chip" style="${st}"></span>${c.c?'<b>'+c.c+'</b>':''}${c.n}</button>`;}).join('')}</div>`;}
+function lim(key){const T=TYPES[S.type];return key==='w'?T.w:key==='h'?T.h:key==='d'?T.dp:[...nRange(),1];}
+function num(key,label,unit,note){
+  const [mn,mx,st]=lim(key);
+  return `<div class="group"><div class="numhead"><label class="label" for="num-${key}">${label}</label><span class="note">${mn}–${mx} ${unit}</span></div>
+  <div class="num"><button type="button" data-step="${key}" data-d="-${st}" aria-label="შემცირება">−</button>
+  <input id="num-${key}" type="number" inputmode="numeric" min="${mn}" max="${mx}" step="${st}" value="${S[key]}" data-num="${key}">
+  <button type="button" data-step="${key}" data-d="${st}" aria-label="გაზრდა">+</button></div>${note?`<p class="note">${note}</p>`:''}</div>`;
+}
+function toggle(key,title,sub){return `<button type="button" class="toggle ${S[key]?'on':''}" data-toggle="${key}"><span><strong style="display:block;font-weight:600">${title}</strong><span class="note">${sub}</span></span><span class="sw"></span></button>`;}
+function field(key,label,type,ph){
+  if(type==='area')return `<div class="field"><label class="label" for="f-${key}">${label}</label><textarea id="f-${key}" data-field="${key}" placeholder="${ph||''}">${esc(S[key])}</textarea></div>`;
+  return `<div class="field"><label class="label" for="f-${key}">${label}</label><input id="f-${key}" type="${type}" data-field="${key}" value="${esc(S[key])}" placeholder="${ph||''}" autocomplete="off"></div>`;
+}
+function projName(st){const T=TYPES[st.type];return (st.client?st.client+' · ':'')+T.n+' '+st.w+(st.type==='wardrobe'?'×'+st.h:'');}
+
+function render(){
+  $steps.innerHTML=STEP_NAMES.map((n,i)=>`<button type="button" data-goto="${i}" class="${i===step?'on':''} ${i<step?'done':''}"><b>${i+1}</b>${n}</button>`).join('');
+  $main.classList.toggle('wide',step>=5);
+  const T=TYPES[S.type];let h='';
+  if(step===0){
+    h=`<h2>შეკვეთა</h2><p class="lede">ვისთვის კეთდება ავეჯი. შეგიძლია ცარიელიც დატოვო და მერე შეავსო.</p>
+    ${field('client','კლიენტის სახელი','text','მაგ.: ნინო ბერიძე')}
+    ${field('phone','ტელეფონი','tel','5XX XX XX XX')}
+    ${field('address','მისამართი','text','ქუჩა, ბინა')}
+    ${field('note','შენიშვნა','area','მაგ.: კედელი არათანაბარია, მარჯვნივ მილია')}`;
+  }else if(step===1){
+    h=`<h2>რა ავეჯია?</h2><p class="lede">აირჩიე ტიპი. ზომას შემდეგ ნაბიჯზე შეიყვან.</p>
+    <div class="types">${Object.entries(TYPES).map(([k,t])=>`<button type="button" class="type ${S.type===k?'on':''}" data-type="${k}">${t.icon}<div><strong>${t.n}</strong><span>${t.d}</span></div></button>`).join('')}</div>`;
+  }else if(step===2){
+    h=`<h2>ზომები</h2><p class="lede">ჩაწერე მილიმეტრებში ან დააჭირე − / +.</p>`+num('w','სიგანე','მმ');
+    if(T.h)h+=num('h','სიმაღლე','მმ');
+    if(T.dp)h+=num('d','სიღრმე','მმ');
+    if(S.type!=='vanity')h+=num('n',S.type==='kitchen'?'მოდულების რაოდენობა':'კარების რაოდენობა','ც.',`თითო ≈ ${Math.round(S.w/S.n)} მმ`);
+    if(S.type==='kitchen')h+=toggle('upper','ზედა კარადები','720 მმ სიმაღლე, 320 მმ სიღრმე')+'<p class="note">ქვედა: კორპუსი 720 მმ + ფეხი 100 მმ + ზედაპირი 40 მმ = 860 მმ.</p>';
+    if(S.type==='vanity')h+=toggle('mirror','სარკე','ტუმბოს თავზე');
+  }else if(step===3){
+        h=`<h2>მასალა</h2>
+    <div class="group"><span class="label">ფასადის მასალა</span>${seg('material',MATERIALS)}</div>
+    <div class="group"><span class="label">ფასადის დიზაინი</span>${seg('style',STYLES,s=>s.id==='shaker'&&S.material!=='paint')}
+    ${S.material!=='paint'?'<p class="note">ჩარჩოიანი ფრეზი მხოლოდ შეღებილ MDF-ზე კეთდება.</p>':''}</div>`;
+    if(S.style!=='gola')h+=`<div class="group"><span class="label">სახელური</span>${seg('handle',HANDLES)}${swatches('hcolor',HCOLORS)}</div>`;
+    h+=`<div class="group"><span class="label">ფასადის ფერი · ${byId(MATERIALS,S.material).n}</span>${picker('front',colorsFor(S.material),POP[S.material]||colorsFor(S.material).map(c=>c.id))}</div>
+    <div class="group"><span class="label">კორპუსის დეკორი · AGT LAM 18</span>${picker('body',colorsFor('lam'),POP.body)}</div>`;
+    if(S.type==='kitchen')h+=`<div class="group"><span class="label">სამუშაო ზედაპირი</span>${swatches('top',TOPS)}</div>`;
+    h+=`<div class="group"><span class="label">ოთახის იატაკი · AGT ლამინატი (მხოლოდ 3D ხედისთვის)</span>${picker('floor',FLOORS,['base',...POP.floor])}</div>`;
+  }else if(step===4){
+    h=`<h2>ფურნიტურა და სერვისი</h2>
+    <div class="group"><span class="label">ფურნიტურის დონე</span><div class="tier">${HWT.map(t=>`<button type="button" data-set="hw" data-val="${t.id}" class="${S.hw===t.id?'on':''}"><b>${t.n}${t.id==='std'?'<span class="pop">★ პოპულარული</span>':''}</b><span>${t.s}</span></button>`).join('')}</div></div>`;
+    if(S.hw==='eco')h+=toggle('soft','რბილი დახურვა','ანჯამებზე Soft Close');
+    if(S.type==='kitchen'&&S.upper)h+=toggle('lift','ზედა კარადებზე ამწევი კარი','ერთი ფრთა ზევით იხსნება, ანჯამის ნაცვლად ამწევი მექანიზმი');
+    h+=`<div class="group"><span class="label">სერვისი</span><div class="checks">${SERVICES.filter(v=>S.type==='kitchen'||!['cutout','appliance','sink'].includes(v.id)||(S.type==='vanity'&&v.id==='sink')).map(v=>`<button type="button" class="check ${S.svc.includes(v.id)?'on':''}" data-svc="${v.id}"><i>${S.svc.includes(v.id)?'✓':''}</i>${v.n}</button>`).join('')}</div></div>`;
+  }else if(step===5){
+    const R=calc();
+    let rowsHtml='',g='',i=0;
+    R.rows.forEach(r=>{if(r.grp!==g){g=r.grp;rowsHtml+=`<tr class="grp"><td colspan="6">${esc(g)}</td></tr>`;}i++;
+      rowsHtml+=`<tr><td class="n">${i}</td><td>${r.name}</td><td class="n">${r.L} × ${r.W}</td><td class="n">${r.q}</td><td>${r.matName}</td><td>${edgeTxt(r.e)}</td></tr>`;});
+    h=`<h2>დეტალირება</h2><p class="lede">${esc(projName(S))} · ${S.w} × ${heightMm()} × ${depthMm()} მმ</p>
+    <div class="sum">
+      <div class="card"><small>კორპუსი · AGT LAM 18 · 2800×2100</small><b>${R.sheetsBody} ფილა</b><span>${R.aBody.toFixed(2)} მ² · ${cName(byId(COLORS,S.body))}</span></div>
+      <div class="card"><small>ფასადი · ${byId(MATERIALS,S.material).n} · ${byId(MATERIALS,S.material).sheet}</small><b>${S.material==='paint'?R.aFront.toFixed(2)+' მ²':R.sheetsFront+' ფილა'}</b><span>${S.material==='paint'?'':R.aFront.toFixed(2)+' მ² · '}${cName(byId(COLORS,S.front))}</span></div>
+      <div class="card"><small>HDF 3 მმ</small><b>${R.sheetsHdf} ფილა</b><span>${R.aHdf.toFixed(2)} მ²</span></div>
+      <div class="card"><small>კრომკა 2 მმ</small><b>${R.edge} მ</b><span>+10% მარაგით</span></div>
+    </div>
+    <div class="group"><span class="label">დეტალები · ${R.cnt} ც. · მმ</span>
+    <div class="tbl-wrap"><table><thead><tr><th>№</th><th>დეტალი</th><th>ზომა</th><th>ც.</th><th>მასალა</th><th>კრომკა 2 მმ</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></div>
+    <div class="group"><span class="label">სერვისი</span><p style="margin:0;font-size:15px">${S.svc.length?SERVICES.filter(v=>S.svc.includes(v.id)).map(v=>v.n).join(' · '):'—'}</p></div>
+    <div class="group"><span class="label">ფურნიტურა · ${byId(HWT,S.hw).n}</span><dl class="hw">${Object.entries(R.HW).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl></div>
+    <p class="note">ფილების რაოდენობა დათვლილია რასკროით (ხერხის სისქე 4 მმ, კიდე 10 მმ). დაჭრის რუკა შემდეგ ნაბიჯზეა.${S.material==='paint'?' შეღებილი MDF ფასადები კრომკის გარეშეა.':' კრომკა: AGT-ის შესაბამისი ABS/PVC იმავე ფერში.'}</p>
+    <div class="actions">
+      <button type="button" class="primary" id="actSave">შენახვა</button>
+      <button type="button" id="actCsv">CSV ფაილი</button>
+      <button type="button" id="actCopy">ტექსტის კოპირება</button>
+    </div>
+    <p class="toast" id="toast" aria-live="polite"></p>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="დეტალირება ტექსტად"></textarea>`;
+  }else{
+    const Rr=calc(),plan=Rr.plan;
+    const tot=plan.reduce((a,p)=>a+p.sheets.length,0);
+    h=`<h2>რასკროი</h2><p class="lede">დაჭრის რუკა ფილებზე. ნომერი = დეტალის № დეტალირებიდან, ↻ = შემობრუნებული. ხის დეკორზე ბოჭკოს მიმართულება დაცულია.</p>
+    <div class="sum">${plan.map(pl=>`<div class="card"><small>${esc(pl.title)}</small><b>${pl.sheets.length} ფილა</b><span>${pl.SW}×${pl.SH} · საშ. ${pl.sheets.length?Math.round(pl.sheets.reduce((a,s)=>a+s.used,0)/pl.sheets.length*100):0}%</span></div>`).join('')}</div>
+    ${plan.some(pl=>pl.over.length)?`<p class="warn">ფილაზე არ ეტევა: ${plan.flatMap(pl=>pl.over).map(o=>'№'+o.n+' '+o.name+' '+o.L+'×'+o.W).join(', ')}. ეს დეტალი ორ ნაწილად უნდა დაიჭრას.</p>`:''}
+    ${plan.map(pl=>`<div class="group"><span class="label">${esc(pl.title)}</span><div class="cutgrid">${pl.sheets.map((sh,i)=>sheetSvg(pl,sh,i)).join('')}</div></div>`).join('')}
+    <div class="group"><span class="label">სახერხ საამქროში გაგზავნა · ${tot} ფილა</span>
+    <p class="note">პაკეტში შედის: კლიენტი, მასალები და ფილების რაოდენობა, დეტალები ზომით და კრომკით (L1 L2 W1 W2), ფურნიტურა და სერვისი.</p>
+    <div class="actions">
+      <button type="button" class="primary" id="actShare">სახერხში გაგზავნა</button>
+      <button type="button" id="actCsv">CSV ფაილი</button>
+      <button type="button" id="actHw">ფურნიტურის სია</button>
+    </div></div>
+    <p class="toast" id="toast" aria-live="polite"></p>
+    <textarea class="copybox" id="copybox" hidden readonly aria-label="ტექსტი გასაგზავნად"></textarea>`;
+  }
+  $c.innerHTML=h;
+  const prev=document.getElementById('prev');prev.style.visibility=step===0?'hidden':'visible';
+  document.getElementById('next').textContent=step===LAST?'შენახვა':'შემდეგი';
+  renderHeader();
+}
+function renderHeader(){
+  document.getElementById('pName').textContent=projName(S);
+  const st=document.getElementById('pState');
+  st.className=dirty?'dirty':'';
+  st.textContent=dirty?(curId?'შეუნახავი ცვლილებები':'არ არის შენახული'):(lastSaved?'შენახულია '+new Date(lastSaved).toLocaleTimeString('ka-GE',{hour:'2-digit',minute:'2-digit'}):'არ არის შენახული');
+}
+function touch(){dirty=true;renderHeader();}
+function change(){touch();build();render();}
+
+function commitNum(k,v){
+  const [mn,mx]=lim(k);v=Math.round(+v);if(!isFinite(v))v=S[k];
+  S[k]=Math.min(mx,Math.max(mn,v));
+  if(k==='w'&&S.type!=='vanity')S.n=autoN(S);
+  change();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.type){const k=b.dataset.type;if(S.type!==k){S.type=k;Object.assign(S,TYPES[k].def);S.n=autoN(S);}change();return;}
+  if(b.dataset.set){S[b.dataset.set]=b.dataset.val;
+    if(S.material!=='paint'&&S.style==='shaker')S.style='flat';
+    normalize();
+    change();return;}
+  if(b.dataset.all){const k=b.dataset.all;ui.all[k]=!ui.all[k];render();return;}
+  if(b.dataset.svc){const v=b.dataset.svc;S.svc=S.svc.includes(v)?S.svc.filter(x=>x!==v):[...S.svc,v];touch();render();return;}
+  if(b.dataset.toggle){S[b.dataset.toggle]=!S[b.dataset.toggle];change();return;}
+  if(b.dataset.step){const k=b.dataset.step;const v=S[k]+(+b.dataset.d);const [mn,mx]=lim(k);S[k]=Math.min(mx,Math.max(mn,v));if(k==='w'&&S.type!=='vanity')S.n=autoN(S);change();return;}
+  if(b.dataset.goto){step=+b.dataset.goto;render();$c.scrollTop=0;return;}
+  if(b.dataset.view){setView(b.dataset.view);fitCamera(false);return;}
+  if(b.id==='actSave'){save();return;}
+  if(b.id==='actCsv'){exportCsv();return;}
+  if(b.id==='actCopy'){copyText();return;}
+  if(b.id==='actShare'){shareShop();return;}
+  if(b.id==='actHw'){copyOut(hwText(),'ფურნიტურის სია დაკოპირდა.');return;}
+  if(b.dataset.hint){aiIn.value=b.dataset.hint;aiAsk();return;}
+});
+document.addEventListener('change',e=>{const k=e.target.dataset.num;if(k)commitNum(k,e.target.value);});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.num){e.preventDefault();e.target.blur();}});
+document.addEventListener('input',e=>{const qk=e.target.dataset&&e.target.dataset.q;if(qk){ui.q[qk]=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById('q-'+qk);if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(_){}}return;}const k=e.target.dataset.field;if(!k)return;S[k]=e.target.value;touch();});
+function setView(v){view=v||'free';document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));}
+document.getElementById('prev').onclick=()=>{if(step>0){step--;render();$c.scrollTop=0;}};
+document.getElementById('next').onclick=()=>{if(step<LAST){step++;render();$c.scrollTop=0;}else save();};
+document.getElementById('btnFull').onclick=()=>{const d=document.documentElement;try{(document.fullscreenElement?document.exitFullscreen():d.requestFullscreen()).catch(()=>{});}catch(_){}};
+document.getElementById('btnSave').onclick=()=>save();
+document.getElementById('btnNew').onclick=()=>{newProject();};
+try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{});}catch(_){}
+
+function toast(msg){const t=document.getElementById('toast');if(t){t.textContent=msg;}else{const s=document.getElementById('pState');s.textContent=msg;}}
+function newProject(){S=JSON.parse(JSON.stringify(DEFAULTS));S.n=autoN(S);curId=null;dirty=false;lastSaved=null;step=0;setView('angle');build();render();}
+
+/* ---------- storage: shared db, else this device ---------- */
+let db=null,col=null,projects=[],useLocal=false;
+const LKEY='novora-projects';
+function localLoad(){try{return JSON.parse(localStorage.getItem(LKEY)||'[]');}catch(_){return [];}}
+function localStore(list){try{localStorage.setItem(LKEY,JSON.stringify(list));return true;}catch(_){return false;}}
+(async()=>{
+  try{db=window.claude&&window.claude.use?await window.claude.use('db'):null;}catch(_){db=null;}
+  if(db){
+    col=db.collection('projects');
+    col.orderBy('updatedAt','desc').limit(300).onSnapshot(s=>{projects=s.docs.map(d=>Object.assign({id:d.id},d.data()));renderList();},()=>{});
+  }else{useLocal=true;projects=localLoad().sort((a,b)=>b.updatedAt-a.updatedAt);renderList();}
+})();
+let saving=false;
+async function save(){
+  if(saving)return;saving=true;
+  if(!curId)curId='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const R=calc();
+  const body={name:projName(S),client:S.client,phone:S.phone,address:S.address,type:S.type,size:`${S.w} × ${heightMm()} × ${depthMm()}`,parts:R.cnt,state:JSON.parse(JSON.stringify(S)),updatedAt:Date.now()};
+  try{
+    if(col){await col.doc(curId).set(body);}
+    else{const list=localLoad().filter(p=>p.id!==curId);list.push(Object.assign({id:curId},body));if(!localStore(list))throw new Error('local');projects=list.sort((a,b)=>b.updatedAt-a.updatedAt);renderList();}
+    dirty=false;lastSaved=body.updatedAt;renderHeader();toast('შენახულია.');
+  }catch(err){
+    const code=err&&err.code;
+    toast(code==='quota_exceeded'?'ვერ შეინახა: ადგილი შეივსო. წაშალე ძველი პროექტები.':code==='invalid_argument'?'ვერ შეინახა: ამ ბმულზე შენახვის უფლება არ გაქვს.':'ვერ შეინახა. შეამოწმე ინტერნეტი და სცადე ხელახლა.');
+    renderHeader();
+  }finally{saving=false;}
+}
+
+/* projects drawer */
+let confirmDel=null;
+document.getElementById('btnList').onclick=()=>{confirmDel=null;renderList();$sheet.hidden=false;};
+document.getElementById('sheetClose').onclick=()=>{$sheet.hidden=true;};
+$sheet.addEventListener('click',e=>{if(e.target===$sheet)$sheet.hidden=true;});
+function renderList(){
+  document.getElementById('storageNote').textContent=useLocal?'პროექტები ინახება მხოლოდ ამ მოწყობილობაზე.':'პროექტები ინახება Novora-ს საერთო ბაზაში: ჩანს ყველა მოწყობილობაზე, სადაც ეს ბმული გაიხსნება.';
+  if(!projects.length){$plist.innerHTML='<div class="empty">ჯერ შენახული პროექტი არ არის.<br>შეავსე ზომები და დააჭირე „შენახვა“.</div>';return;}
+  $plist.innerHTML=projects.map(p=>`<div class="pitem ${p.id===curId?'cur':''}">
+    <button type="button" class="open" data-open="${esc(p.id)}"><b>${esc(p.name||'უსახელო')}</b><span>${esc(p.size||'')} მმ · ${new Date(p.updatedAt||0).toLocaleDateString('ka-GE')}${p.phone?' · '+esc(p.phone):''}</span></button>
+    <div class="pbtns"><button type="button" data-copy="${esc(p.id)}">ასლი</button><button type="button" class="${confirmDel===p.id?'confirm':'danger'}" data-del="${esc(p.id)}">${confirmDel===p.id?'წავშალო?':'წაშლა'}</button></div>
+  </div>`).join('');
+}
+$plist.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const find=id=>projects.find(p=>p.id===id);
+  if(b.dataset.open){const p=find(b.dataset.open);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=p.id;dirty=false;lastSaved=p.updatedAt;step=LAST;$sheet.hidden=true;setView('angle');build();render();return;}
+  if(b.dataset.copy){const p=find(b.dataset.copy);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=null;dirty=true;lastSaved=null;step=0;$sheet.hidden=true;build();render();return;}
+  if(b.dataset.del){
+    const id=b.dataset.del;
+    if(confirmDel!==id){confirmDel=id;renderList();return;}
+    confirmDel=null;
+    try{if(col)await col.doc(id).delete();else{const list=localLoad().filter(p=>p.id!==id);localStore(list);projects=list;renderList();}}catch(_){}
+    if(id===curId){curId=null;dirty=true;renderHeader();}
+  }
+});
+
+/* export */
+function csvText(){
+  const R=calc(),q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const lines=[['ჯგუფი','დეტალი','სიგრძე მმ','სიგანე მმ','რაოდენობა','მასალა','L1','L2','W1','W2'].map(q).join(',')];
+  R.rows.forEach(r=>lines.push([r.grp,r.name,r.L,r.W,r.q,r.matName,r.e[0]>=1?2:0,r.e[0]>=2?2:0,r.e[1]>=1?2:0,r.e[1]>=2?2:0].map(q).join(',')));
+  lines.push('');lines.push([q('ფურნიტურა · '+byId(HWT,S.hw).n),q('რაოდენობა')].join(','));
+  Object.entries(R.HW).forEach(([k,v])=>lines.push([q(k),q(v)].join(',')));
+  lines.push('');lines.push(q('სერვისი')+','+q(SERVICES.filter(v=>S.svc.includes(v.id)).map(v=>v.n).join('; ')));
+  return '﻿'+lines.join('\r\n');
+}
+function plainText(){
+  const R=calc();let s=`NOVORA · ${projName(S)}\n${S.w} × ${heightMm()} × ${depthMm()} მმ\n`;
+  if(S.phone)s+=`ტელ: ${S.phone}\n`;if(S.address)s+=`მისამართი: ${S.address}\n`;if(S.note)s+=`შენიშვნა: ${S.note}\n`;
+  s+=`\nკორპუსი: ${R.bodyM} — ${R.sheetsBody} ფილა (${R.aBody.toFixed(2)} მ²)\nფასადი: ${R.frontM} — ${R.aFront.toFixed(2)} მ²\nHDF: ${R.aHdf.toFixed(2)} მ²\nკრომკა 2 მმ: ${R.edge} მ\n`;
+  let g='';R.rows.forEach(r=>{if(r.grp!==g){g=r.grp;s+=`\n${g}\n`;}s+=`  ${r.name}: ${r.L}×${r.W} — ${r.q} ც. (${edgeTxt(r.e)})\n`;});
+  s+=`\nსერვისი: ${S.svc.length?SERVICES.filter(v=>S.svc.includes(v.id)).map(v=>v.n).join(', '):'—'}\n`;
+  s+=`\nფურნიტურა (${byId(HWT,S.hw).n})\n`;Object.entries(R.HW).forEach(([k,v])=>s+=`  ${k}: ${v}\n`);
+  return s;
+}
+async function exportCsv(){
+  let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){}
+  const d=new Date(),stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(!dl&&!window.claude){
+    try{const url=URL.createObjectURL(new Blob([csvText()],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`novora-detalireba-${stamp}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('ფაილი ჩამოიტვირთა.');}
+    catch(_){toast('ფაილი ვერ ჩამოიტვირთა. გამოიყენე „ტექსტის კოპირება“.');}
+    return;
+  }
+  if(!dl){toast('ფაილის ჩამოტვირთვა აქ არ მუშაობს. გამოიყენე „ტექსტის კოპირება“.');return;}
+  try{await dl.save({filename:`novora-detalireba-${stamp}.csv`,data:csvText()});toast('ფაილი ჩამოიტვირთა.');}
+  catch(err){toast(err&&err.code==='declined'?'ჩამოტვირთვა გაუქმდა.':'ფაილი ვერ ჩამოიტვირთა. გამოიყენე „ტექსტის კოპირება“.');}
+}
+function copyOut(txt,msg){
+  const box=document.getElementById('copybox');
+  const fallback=()=>{if(!box)return;box.hidden=false;box.value=txt;box.focus();box.select();toast('მონიშნე და დააკოპირე ქვემოთ.');};
+  try{navigator.clipboard.writeText(txt).then(()=>toast(msg),fallback);}catch(_){fallback();}
+}
+function hwText(){const R=calc();let s=`NOVORA · ფურნიტურა · ${projName(S)}\nდონე: ${byId(HWT,S.hw).n}\n`;Object.entries(R.HW).forEach(([k,v])=>s+=`• ${k}: ${v}\n`);return s;}
+function shopText(){
+  const R=calc();let s=`NOVORA · სახერხისთვის\n${projName(S)} · ${S.w} × ${heightMm()} × ${depthMm()} მმ\n`;
+  if(S.client)s+=`კლიენტი: ${S.client}${S.phone?' · '+S.phone:''}\n`;
+  s+='\nმასალა\n';R.plan.forEach(pl=>s+=`• ${pl.title}: ${pl.sheets.length} ფილა (${pl.SW}×${pl.SH})\n`);
+  s+=`• კრომკა 2 მმ: ${R.edge} მ\n\nდეტალები (სიგრძე × სიგანე, ც., კრომკა)\n`;
+  let g='';R.rows.forEach((r,i)=>{if(r.matName!==g){g=r.matName;s+=`\n[${g}]\n`;}s+=`${i+1}. ${r.name} ${r.L}×${r.W} — ${r.q} ც. — ${edgeTxt(r.e)}\n`;});
+  s+=`\nფურნიტურა (${byId(HWT,S.hw).n})\n`;Object.entries(R.HW).forEach(([k,v])=>s+=`• ${k}: ${v}\n`);
+  if(S.note)s+=`\nშენიშვნა: ${S.note}\n`;
+  return s;
+}
+async function shareShop(){
+  const txt=shopText();
+  if(!window.claude&&navigator.share){try{const f=new File([csvText()],'novora-raskroi.csv',{type:'text/csv'});const data={title:'NOVORA რასკროი',text:txt};if(navigator.canShare&&navigator.canShare({files:[f]}))data.files=[f];await navigator.share(data);toast('გაიგზავნა.');return;}catch(e){if(e&&e.name==='AbortError')return;}}
+  copyOut(txt,'დაკოპირდა. ჩასვი სახერხის WhatsApp-ში ან Viber-ში და მიაყოლე CSV ფაილი.');
+}
+function copyText(){
+  const txt=plainText(),box=document.getElementById('copybox');
+  const fallback=()=>{box.hidden=false;box.value=txt;box.focus();box.select();toast('მონიშნე და დააკოპირე ქვემოთ.');};
+  try{navigator.clipboard.writeText(txt).then(()=>toast('დაკოპირდა. ჩასვი WhatsApp-ში ან Viber-ში.'),fallback);}catch(_){fallback();}
+}
+
+/* AI assistant */
+const aiBox=document.getElementById('aiBox'),aiLog=document.getElementById('aiLog'),aiIn=document.getElementById('aiIn'),aiBtnEl=document.getElementById('aiBtn');
+let sampler=null,aiBusy=false;
+(async()=>{try{sampler=window.claude&&window.claude.use?await window.claude.use('sample'):null;}catch(_){sampler=null;}if(sampler)aiBtnEl.hidden=false;})();
+aiBtnEl.onclick=()=>{aiBox.hidden=!aiBox.hidden;if(!aiBox.hidden)aiIn.focus();};
+document.getElementById('aiSend').onclick=()=>aiAsk();
+aiIn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();aiAsk();}});
+function aiSay(t,me){const p=document.createElement('p');if(me)p.className='me';p.textContent=t;aiLog.appendChild(p);aiLog.scrollTop=aiLog.scrollHeight;return p;}
+async function aiAsk(){
+  const q=aiIn.value.trim();if(!q||aiBusy||!sampler)return;aiBusy=true;aiIn.value='';aiSay(q,true);const wait=aiSay('ვფიქრობ…');
+  const R=calc(),T=TYPES[S.type];
+  const ctx={type:S.type,w:S.w,h:S.h,d:S.d,n:S.n,upper:S.upper,mirror:S.mirror,lift:S.lift,material:S.material,style:S.style,handle:S.handle,hcolor:S.hcolor,front:S.front,body:S.body,top:S.top,hw:S.hw,soft:S.soft,svc:S.svc};
+  const prompt=`შენ ხარ Novora-ს ავეჯის კონსტრუქტორის ასისტენტი. ოსტატი ქართულად გწერს. შეცვალე პროექტი ან უპასუხე კითხვას.
+ამჟამინდელი პროექტი (JSON): ${JSON.stringify(ctx)}
+შედეგები: კორპუსი ${R.sheetsBody} ფილა, ფასადი ${R.sheetsFront} ფილა (${R.aFront.toFixed(2)} მ²), HDF ${R.sheetsHdf}, კრომკა ${R.edge} მ, დეტალები ${R.cnt} ც.
+დასაშვები მნიშვნელობები:
+type: kitchen | wardrobe | vanity. w (მმ): kitchen 1200-4800, wardrobe 600-3600, vanity 400-1400. h (მხოლოდ wardrobe) 1800-2800. d (wardrobe) 400-650. n: kitchen 2-8 მოდული, wardrobe 1-8 კარი.
+upper, mirror, lift, soft: true/false. material: ${MATERIALS.map(m=>m.id+'='+m.n).join(', ')}. style: flat | shaker (მხოლოდ paint) | gola. handle: bar | knob. hcolor: black | steel | brass. top: quartz | concrete | granite | oak. hw: eco | std | prem.
+svc (სია): ${SERVICES.map(v=>v.id+'='+v.n).join(', ')}.
+front ფერები ამ მასალისთვის (id=კოდი სახელი): ${colorsFor(S.material).map(c=>c.id+'='+cName(c)).join('; ')}
+თუ მასალას ცვლი, front აირჩიე ახალი მასალის სიიდან: ${MATERIALS.map(m=>m.id+': '+colorsFor(m.id).slice(0,40).map(c=>c.id+'='+cName(c)).join(', ')).join(' | ')}
+body (კორპუსი, მხოლოდ LAM): ${colorsFor('lam').map(c=>c.id+'='+cName(c)).join('; ')}
+ოსტატის მოთხოვნა: «${q}»
+უპასუხე მხოლოდ JSON-ით: {"set":{...შესაცვლელი ველები, ან {}},"reply":"მოკლე პასუხი ქართულად, რა შეიცვალა ან პასუხი კითხვაზე"}`;
+  try{
+    const out=await sampler.json(prompt,{modelTier:'quick',cache:false});
+    const ch=(out&&out.set)||{};const allowed=['type','w','h','d','n','upper','mirror','lift','material','style','handle','hcolor','front','body','top','hw','soft','svc'];
+    if(ch.type&&TYPES[ch.type]&&ch.type!==S.type){S.type=ch.type;Object.assign(S,TYPES[ch.type].def);S.n=autoN(S);}
+    for(const k of allowed){if(!(k in ch)||k==='type')continue;const v=ch[k];
+      if(['w','h','d','n'].includes(k)){const l=lim(k);if(!l)continue;S[k]=Math.min(l[1],Math.max(l[0],Math.round(+v)||S[k]));}
+      else if(['upper','mirror','lift','soft'].includes(k))S[k]=!!v;
+      else if(k==='svc'&&Array.isArray(v))S.svc=v.filter(x=>SERVICES.some(sv=>sv.id===x));
+      else if(typeof v==='string')S[k]=v;}
+    if('w' in ch&&!('n' in ch)&&S.type!=='vanity')S.n=autoN(S);
+    if(!MATERIALS.some(m=>m.id===S.material))S.material='lam';if(!STYLES.some(x=>x.id===S.style))S.style='flat';if(S.material!=='paint'&&S.style==='shaker')S.style='flat';
+    if(!HANDLES.some(x=>x.id===S.handle))S.handle='bar';if(!HCOLORS.some(x=>x.id===S.hcolor))S.hcolor='black';if(!TOPS.some(x=>x.id===S.top))S.top='quartz';
+    normalize();
+    wait.textContent=(out&&out.reply)||'შევცვალე.';
+    if(Object.keys(ch).length)change();
+  }catch(e){wait.textContent=e&&e.code==='not_granted'?'AI ასისტენტი გამორთულია. ჩართვა შეგიძლია გვერდის ნებართვებიდან.':e&&e.code==='rate_limited'?'ცოტა მოიცადე და ისევ სცადე.':'ვერ შევასრულე. სცადე სხვა სიტყვებით.';}
+  finally{aiBusy=false;}
+}
+normalize();S.n=autoN(S);
+build();render();fitCamera(true);requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
