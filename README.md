@@ -15,3 +15,9 @@ Novora-ს ავეჯის კონსტრუქტორი: შოურ
 2. ბიზნესი: Novora-ს კატალოგი და ფასები, PDF შეთავაზება, ოსტატის გამოწერა (TBC/BOG), საჯარო გვერდი და გალერეა
 3. სივრცე: ოთახის ფოტო ფონად, AR (ARCore/ARKit), LiDAR გაზომვა, ვიდეო, iOS
 4. კომპანიები: დიდი ეკრანი, რამდენიმე ოთახის პროექტი
+
+## ბაზა (Supabase)
+- პროექტი: `hzsoschqllsnbwsbufqd` (ორგანიზაცია novora)
+- სქემა: `supabase/migrations/0001_init.sql` — profiles (ოსტატები), clients, projects, project_files, catalog_items; RLS: ოსტატი მხოლოდ თავის მონაცემებს ხედავს
+- Storage: `project-files` (პირადი, `<master_id>/<project_id>/…`), `catalog` (საჯარო)
+- საიდუმლო (secret) გასაღები კოდში არასდროს ინახება
