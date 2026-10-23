@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
       res.status(200).json({ b64: d.data, format: String(d.mimeType || d.mime_type || 'image/png').split('/')[1] });
       return;
     }
-    if (!oai) { const out = await gateway(gw, prompt, body.image); res.status(200).json({ b64: out.b64, format: out.format }); return; }
+    if (!oai) { const out = await gateway(gw, prompt, body.image, body.quality === 'high' ? 'high' : 'std'); console.log('photo ok', out.model); res.status(200).json({ b64: out.b64, format: out.format, model: out.model }); return; }
     const fd = new FormData();
     fd.append('model', 'gpt-image-1');
     fd.append('prompt', prompt);
@@ -54,10 +54,10 @@ module.exports = async (req, res) => {
   }
 };
 
-const GW_MODELS = ['google/gemini-3.1-flash-image-preview', 'google/gemini-2.5-flash-image'];
-async function gateway(token, prompt, dataUrl) {
+const GW_MODELS = { high: ['google/gemini-3-pro-image', 'google/gemini-3-pro-image-preview', 'google/gemini-3.1-flash-image-preview', 'google/gemini-2.5-flash-image'], std: ['google/gemini-3.1-flash-image-preview', 'google/gemini-2.5-flash-image'] };
+async function gateway(token, prompt, dataUrl, quality) {
   let last = null;
-  for (const model of GW_MODELS) {
+  for (const model of (GW_MODELS[quality] || GW_MODELS.std)) {
     const content = dataUrl ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: dataUrl } }] : prompt;
     const r = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',

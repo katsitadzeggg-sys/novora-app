@@ -288,7 +288,7 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
 <div class="photo" id="photo" hidden>
   <div class="photo-in" role="dialog" aria-label="პროექტის ფოტო">
     <div class="sheet-head"><h2>პროექტის ფოტო</h2><button class="ghost" type="button" id="photoClose">დახურვა</button></div>
-    <div class="photo-img"><img id="photoImg" alt="პროექტის ხედი"><div class="photo-wait" id="photoWait" hidden><span class="spin"></span>AI ქმნის რეალისტურ ფოტოს… 20–60 წამი</div></div>
+    <div class="photo-img"><img id="photoImg" alt="პროექტის ხედი"><div class="photo-wait" id="photoWait" hidden><span class="spin"></span>AI ქმნის რეალისტურ ფოტოს… 30–90 წამი</div></div>
     <div id="photoStyles"></div>
     <p class="note" id="photoNote"></p>
     <div class="actions">
@@ -1374,6 +1374,7 @@ function render(){
     h=`<h2>პროექტის ფოტო</h2><p class="lede">3D-ში დააყენე კუთხე (თითით მოატრიალე ან აირჩიე ქვემოთ), აირჩიე სტილი და დააჭირე „ფოტოს შექმნა“. ფოტო შეიქმნება და ჩამოიტვირთება.</p>
     <div class="group"><span class="label">კუთხე</span>${segX([{id:'angle',n:'კუთხიდან'},{id:'front',n:'წინიდან'},{id:'close',n:'ახლოდან'}],x=>`data-view="${x.id}"`,x=>view===x.id)}</div>
     <div class="group"><span class="label">ფოტოს სტილი</span>${segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle)}</div>
+    <div class="group"><span class="label">AI ხარისხი</span>${segX(PQUAL,x=>`data-pq="${x.id}"`,x=>x.id===photoQ)}</div>
     <div class="actions"><button type="button" class="primary" id="actGen">ფოტოს შექმნა და ჩამოტვირთვა</button><button type="button" id="actPhoto">მხოლოდ 3D ხედი</button></div>
     <p class="note">ფოტო იქმნება აქვე, უფასოდ: სტუდიური განათება, მარმარილოს კედელი, ჭერის სანათები და დეკორი ემატება მხოლოდ ფოტოში, პროექტი არ იცვლება.</p>
     <p class="toast" id="toast" aria-live="polite"></p>`;
@@ -1430,9 +1431,10 @@ document.addEventListener('click',e=>{
   if(b.id==='photoClose'){document.getElementById('photo').hidden=true;return;}
   if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;if(step===7)render();if(!document.getElementById('photo').hidden){openPhoto();}return;}
   if(b.id==='actGen'){genPhoto();return;}
+  if(b.dataset.pq){photoQ=b.dataset.pq;if(step===7)render();renderPStyles(!!aiReady);return;}
   if(b.id==='photoAi'){aiPhoto();return;}
   if(b.id==='photoShare'){photoShare();return;}
-  if(b.id==='photoShow'){const im=document.getElementById('photoImg'),toAi=im.src===shotURL&&aiURL;setPhoto(toAi?aiURL:shotURL,!!toAi);b.textContent=toAi?'3D ხედი':'AI ფოტო';return;}
+  if(b.id==='photoShow'){const toAi=!showingAi&&!!aiURL;setPhoto(toAi?aiURL:shotURL,toAi);b.textContent=toAi?'3D ხედი':'AI ფოტო';return;}
   if(b.dataset.mnd){const p=b.dataset.mnd.split(':'),ref=p[0]+':'+p[1];selDr=0;modEdit(ref,(ms,i)=>{ms[i].nd=+p[2];ms[i].ins=DEFINS[+p[2]].slice();});openFront(ref,0,true);return;}
   if(b.dataset.mdr){const p=b.dataset.mdr.split(':'),ref=p[0]+':'+p[1];selDr=+p[2];openFront(ref,selDr,true);render();return;}
   if(b.dataset.mins){const p=b.dataset.mins.split(':'),ref=p[0]+':'+p[1],k=+p[2];selDr=k;modEdit(ref,(ms,i)=>{const a=insFor(ms[i]);a[k]=p[3];ms[i].ins=a;ms[i].nd=a.length;});openFront(ref,k,false);return;}
@@ -1565,7 +1567,8 @@ async function saveBlob(filename,blob,say){
   try{await dl.save({filename,data:blob});say('ფაილი ჩამოიტვირთა.');}catch(err){say(err&&err.code==='declined'?'ჩამოტვირთვა გაუქმდა.':'ფაილი ვერ ჩამოიტვირთა.');}
 }
 /* ---------- project photo: clean 3D render, then optional AI photoreal pass (/api/photo on the hosted app) ---------- */
-let shotURL=null,aiURL=null,aiReady=null,photoStyle='lux';
+let shotURL=null,aiURL=null,aiReady=null,photoStyle='lux',photoQ='high';
+const PQUAL=[{id:'high',n:'მაღალი ხარისხი',s:'≈0.13$, 30–90 წმ'},{id:'std',n:'სწრაფი',s:'≈0.05$, 15–40 წმ'}];
 const PSTYLES=[{id:'lux',n:'ლუქსი, საღამო',s:'როგორც შოურუმის კატალოგში'},{id:'day',n:'დღის სინათლე',s:'ნათელი, ბუნებრივი'},{id:'scandi',n:'მინიმალისტური',s:'სკანდინავიური, მსუბუქი'}];
 const PSTYLE_TXT={
   lux:' Style: luxury showroom catalogue photo like premium European and Chinese kitchen brands. Evening mood with warm 2700K light: hidden LED strips glowing under the wall cabinets and inside shelves, a slim linear suspended pendant lamp, recessed ceiling downlights and a soft ceiling cove light. Large-format book-matched marble or sintered-stone backsplash and wall cladding, elegant dark-toned surroundings, subtle reflections on the floor, refined decor (a vase, a bowl, a few books), deep soft shadows, cinematic contrast, architectural visualization quality, ultra detailed.',
@@ -1651,22 +1654,34 @@ function snapshot(style){
 function photoPrompt(){
   const fm=byId(MATERIALS,S.material),fc=byId(COLORS,S.front),fu=byId(COLORS,S.frontU)||fc,bc=byId(COLORS,S.body),tp=byId(TOPS,S.top),wl=byId(WALLS,S.wall)||WALLS[0],flr=byId(FLOORS,S.floor)||FLOORS[0],hc=byId(HCOLORS,S.hcolor);
   const col=c=>`${c.n} (${c.hex}${c.wood?', wood grain':''})`;const T={kitchen:'fitted kitchen',wardrobe:'built-in wardrobe',vanity:'bathroom vanity with mirror'}[S.type];
-  let s=`Turn this 3D render into a photorealistic professional interior photograph of the same ${T}. Keep EXACTLY the same camera angle, room, layout, cabinet positions, sizes, proportions, door and drawer divisions, appliances and openings. Do not add, remove or move any furniture, cabinets or appliances.`;
+  let s=`Re-create this 3D render as a REAL PHOTOGRAPH of the same ${T}, indistinguishable from a professional interior photo taken with a full-frame camera in a real apartment. It must not look like a 3D render or CGI.
+STRICT: keep exactly the same camera angle and framing, the same layout, number of cabinets, cabinet widths, heights, door and drawer divisions, handle positions, appliances, sink, hob and wall openings. Do not add, remove, merge or move any furniture, cabinets or appliances.
+The render shows an open cut-away box with empty space around it: turn it into a complete real room instead. Continue the walls, ceiling and floor naturally beyond the edges, add a plausible window light source, so the whole frame is the inside of a real room. No visible floating edges, no cut walls, no empty white or grey void.`;
   s+=` Cabinet fronts: ${fm.n} finish (${S.material==='paint'?'painted MDF, '+byId(GLOSS,S.gloss).n:fm.s||''}) in ${S.split&&S.type==='kitchen'?'lower '+col(fc)+', upper '+col(fu):col(fc)}${S.style==='shaker'?', shaker frame doors':S.style==='fluted'?', vertically fluted fronts':S.style==='gola'?', handleless gola profile':''}.`;
   if(S.style!=='gola')s+=` Handles: ${S.handle==='routed'?'routed integrated finger pulls':S.handle==='knob'?'small round knobs':'slim bar handles'} in ${hc.n==='შავი'?'matte black':hc.id==='steel'?'brushed steel':'brass'}.`;
   s+=` Carcass decor ${col(bc)}.`;if(S.type==='kitchen')s+=` Worktop: ${tp.id==='quartz'?'white quartz':tp.id==='concrete'?'grey concrete look':tp.id==='granite'?'black granite':'solid oak'}, ${S.tt} mm thick.`;
   s+=` Walls painted ${wl.hex}, floor ${flr.c?'laminate '+flr.c:'light oak laminate'} (${flr.hex}).`;
   if(S.type==='kitchen'&&S.ledc!=='off'&&S.upper)s+=` Warm LED strip under the wall cabinets.`;
-  return s+` Keep the cabinet front colors, handles and worktop exactly as described.`+(PSTYLE_TXT[photoStyle]||'')+` Real material textures, 24mm lens, no people, no text, no logos, no watermark.`;
+  return s+` Keep the cabinet front colors, handles and worktop exactly as described.`+(PSTYLE_TXT[photoStyle]||'')+`
+Photographic realism: physically accurate global illumination and soft bounce light, true-to-life reflections on the worktop and floor, fine material detail (real wood grain, stone veining, matte lacquer sheen, brushed metal), subtle natural imperfections, accurate contact shadows under cabinets and objects, correct perspective with vertical lines kept straight (24 mm tilt-shift), f/8, natural colour grading, high dynamic range, sharp focus. No people, no text, no logos, no watermark.`;
 }
 async function checkAi(){
   if(aiReady!==null)return aiReady;if(!/^https?:/.test(location.protocol)||window.claude){aiReady=false;return false;}
   try{const r=await fetch('/api/photo',{cache:'no-store'});const j=await r.json();aiReady=!!(r.ok&&j.ready);}catch(_){aiReady=false;}return aiReady;
 }
-function renderPStyles(ok){document.getElementById('photoStyles').innerHTML=ok?`<span class="sub">ფოტოს სტილი</span>`+segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle):'';}
+function renderPStyles(ok){document.getElementById('photoStyles').innerHTML=`<span class="sub">ფოტოს სტილი</span>`+segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle)+(ok?`<span class="sub">AI ხარისხი</span>`+segX(PQUAL,x=>`data-pq="${x.id}"`,x=>x.id===photoQ):'');}
 let photoFile=null,photoObjURL=null;
 function dataToBlob(d){const m=/^data:([^;]+);base64,(.*)$/.exec(d);const bin=atob(m[2]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m[1]});}
-function setPhoto(d,ai){
+/* brand every photo: NOVORA mark bottom-right */
+function brand(d){return new Promise(res=>{const im=new Image();im.onload=()=>{try{const W=im.naturalWidth,H=im.naturalHeight,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(im,0,0);
+  const fs=Math.round(H*.034),pad=Math.round(H*.035);g.font=`500 ${fs}px "Noto Serif Georgian", Georgia, serif`;try{g.letterSpacing=Math.round(fs*.32)+'px';}catch(_){}
+  const txt='NOVORA',tw=g.measureText(txt).width;const x=W-pad-tw,y=H-pad;
+  const sx=Math.round(fs*.55);g.fillStyle='rgba(20,18,16,.38)';const r=Math.round(fs*.3);g.beginPath();if(g.roundRect)g.roundRect(x-sx,y-fs*1.15,tw+sx*2,fs*1.6,r);else g.rect(x-sx,y-fs*1.15,tw+sx*2,fs*1.6);g.fill();
+  g.fillStyle='rgba(255,255,255,.94)';g.textBaseline='alphabetic';g.fillText(txt,x,y);
+  res(c.toDataURL('image/jpeg',.92));}catch(_){res(d);}};im.onerror=()=>res(d);im.src=d;});}
+let showingAi=false;
+async function setPhoto(d,ai){
+  showingAi=!!ai;d=await brand(d);
   document.getElementById('photoImg').src=d;const blob=dataToBlob(d);
   const nm=(S.client||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'foto';const name=`novora-${nm}-${stampNow()}${ai?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
   if(photoObjURL)URL.revokeObjectURL(photoObjURL);photoObjURL=URL.createObjectURL(blob);photoFile=new File([blob],name,{type:blob.type});
@@ -1677,7 +1692,7 @@ async function photoShare(){if(!photoFile)return;try{await navigator.share({file
 document.getElementById('photoDl').addEventListener('click',e=>{if(!photoFile){e.preventDefault();return;}if(window.claude){e.preventDefault();saveBlob(photoFile.name,photoFile,photoSay);}else setTimeout(()=>photoSay('ფოტო ჩამოიტვირთა (Downloads). თუ არ ჩანს, ფოტოზე ხანგრძლივი შეხება → „სურათის შენახვა“.'),300);});
 function photoSay(t){document.getElementById('photoNote').textContent=t;}
 async function openPhoto(plain){
-  if(qPart)closeQuick();shotURL=snapshot(plain?null:photoStyle);aiURL=null;setPhoto(shotURL,false);
+  if(qPart)closeQuick();shotURL=snapshot(plain?null:photoStyle);aiURL=null;await setPhoto(shotURL,false);
   document.getElementById('photo').hidden=false;document.getElementById('photoShow').hidden=true;document.getElementById('photoWait').hidden=true;
   const ai=document.getElementById('photoAi');ai.disabled=false;photoSay(plain?'3D ხედი, იმავე კუთხიდან.':'სტუდიური ფოტო ('+byId(PSTYLES,photoStyle).n+'), იმავე კუთხიდან. კუთხე ან სტილი შეცვალე და ისევ შექმენი.');
   const ok=await checkAi();ai.hidden=!ok;renderPStyles(true);
@@ -1690,10 +1705,10 @@ async function genPhoto(){
 }
 async function aiPhoto(){
   const ai=document.getElementById('photoAi'),w=document.getElementById('photoWait');if(ai.disabled)return;ai.disabled=true;w.hidden=false;photoSay('');
-  try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt()})});
+  try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt(),quality:photoQ})});
     let j={};try{j=await r.json();}catch(_){}
     if(!r.ok||!j.b64)throw new Error(j.error||('HTTP '+r.status));
-    aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;setPhoto(aiURL,true);
+    aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;await setPhoto(aiURL,true);
     const sh=document.getElementById('photoShow');sh.hidden=false;sh.textContent='3D ხედი';
     photoSay('რეალისტური ფოტო მზადაა. AI ზოგჯერ წვრილმანებს ცვლის, ზომები და დეტალები ზუსტია მხოლოდ დეტალირებაში.');return true;}
   catch(e){photoSay('AI ფოტო ვერ შეიქმნა: '+(e&&e.message||'შეცდომა')+'. სცადე თავიდან.');return false;}
