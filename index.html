@@ -153,6 +153,7 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
 .hw dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
 .hw dt{color:var(--ink)}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions .btnlink{flex:1 1 160px;min-height:56px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;color:var(--ink);text-decoration:none}
 .actions button{flex:1 1 160px;min-height:56px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:600}
 .actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .toast{font-size:14px;color:var(--accent);min-height:20px;margin:0}
@@ -292,7 +293,8 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
     <p class="note" id="photoNote"></p>
     <div class="actions">
       <button type="button" class="primary" id="photoAi">რეალისტური ფოტო (AI)</button>
-      <button type="button" id="photoDl">ჩამოტვირთვა</button>
+      <a class="btnlink" id="photoDl" href="#" download="novora-foto.jpg">ჩამოტვირთვა</a>
+      <button type="button" id="photoShare" hidden>გაზიარება</button>
       <button type="button" id="photoShow">3D ხედი</button>
     </div>
   </div>
@@ -1429,8 +1431,8 @@ document.addEventListener('click',e=>{
   if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;if(step===7)render();if(!document.getElementById('photo').hidden){openPhoto();}return;}
   if(b.id==='actGen'){genPhoto();return;}
   if(b.id==='photoAi'){aiPhoto();return;}
-  if(b.id==='photoDl'){photoDownload();return;}
-  if(b.id==='photoShow'){const im=document.getElementById('photoImg');im.src=im.src===shotURL&&aiURL?aiURL:shotURL;b.textContent=im.src===shotURL?'AI ფოტო':'3D ხედი';return;}
+  if(b.id==='photoShare'){photoShare();return;}
+  if(b.id==='photoShow'){const im=document.getElementById('photoImg'),toAi=im.src===shotURL&&aiURL;setPhoto(toAi?aiURL:shotURL,!!toAi);b.textContent=toAi?'3D ხედი':'AI ფოტო';return;}
   if(b.dataset.mnd){const p=b.dataset.mnd.split(':'),ref=p[0]+':'+p[1];selDr=0;modEdit(ref,(ms,i)=>{ms[i].nd=+p[2];ms[i].ins=DEFINS[+p[2]].slice();});openFront(ref,0,true);return;}
   if(b.dataset.mdr){const p=b.dataset.mdr.split(':'),ref=p[0]+':'+p[1];selDr=+p[2];openFront(ref,selDr,true);render();return;}
   if(b.dataset.mins){const p=b.dataset.mins.split(':'),ref=p[0]+':'+p[1],k=+p[2];selDr=k;modEdit(ref,(ms,i)=>{const a=insFor(ms[i]);a[k]=p[3];ms[i].ins=a;ms[i].nd=a.length;});openFront(ref,k,false);return;}
@@ -1662,9 +1664,20 @@ async function checkAi(){
   try{const r=await fetch('/api/photo',{cache:'no-store'});const j=await r.json();aiReady=!!(r.ok&&j.ready);}catch(_){aiReady=false;}return aiReady;
 }
 function renderPStyles(ok){document.getElementById('photoStyles').innerHTML=ok?`<span class="sub">ფოტოს სტილი</span>`+segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle):'';}
+let photoFile=null,photoObjURL=null;
+function dataToBlob(d){const m=/^data:([^;]+);base64,(.*)$/.exec(d);const bin=atob(m[2]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m[1]});}
+function setPhoto(d,ai){
+  document.getElementById('photoImg').src=d;const blob=dataToBlob(d);
+  const nm=(S.client||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'foto';const name=`novora-${nm}-${stampNow()}${ai?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
+  if(photoObjURL)URL.revokeObjectURL(photoObjURL);photoObjURL=URL.createObjectURL(blob);photoFile=new File([blob],name,{type:blob.type});
+  const a=document.getElementById('photoDl');a.href=photoObjURL;a.download=name;
+  const sh=document.getElementById('photoShare');sh.hidden=!(navigator.canShare&&navigator.canShare({files:[photoFile]}));
+}
+async function photoShare(){if(!photoFile)return;try{await navigator.share({files:[photoFile],title:'NOVORA'});}catch(e){if(!e||e.name!=='AbortError')photoSay('გაზიარება ვერ მოხერხდა. გამოიყენე „ჩამოტვირთვა“ ან ფოტოზე ხანგრძლივი შეხება → შენახვა.');}}
+document.getElementById('photoDl').addEventListener('click',e=>{if(!photoFile){e.preventDefault();return;}if(window.claude){e.preventDefault();saveBlob(photoFile.name,photoFile,photoSay);}else setTimeout(()=>photoSay('ფოტო ჩამოიტვირთა (Downloads). თუ არ ჩანს, ფოტოზე ხანგრძლივი შეხება → „სურათის შენახვა“.'),300);});
 function photoSay(t){document.getElementById('photoNote').textContent=t;}
 async function openPhoto(plain){
-  if(qPart)closeQuick();shotURL=snapshot(plain?null:photoStyle);aiURL=null;const im=document.getElementById('photoImg');im.src=shotURL;
+  if(qPart)closeQuick();shotURL=snapshot(plain?null:photoStyle);aiURL=null;setPhoto(shotURL,false);
   document.getElementById('photo').hidden=false;document.getElementById('photoShow').hidden=true;document.getElementById('photoWait').hidden=true;
   const ai=document.getElementById('photoAi');ai.disabled=false;photoSay(plain?'3D ხედი, იმავე კუთხიდან.':'სტუდიური ფოტო ('+byId(PSTYLES,photoStyle).n+'), იმავე კუთხიდან. კუთხე ან სტილი შეცვალე და ისევ შექმენი.');
   const ok=await checkAi();ai.hidden=!ok;renderPStyles(true);
@@ -1680,17 +1693,13 @@ async function aiPhoto(){
   try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt()})});
     let j={};try{j=await r.json();}catch(_){}
     if(!r.ok||!j.b64)throw new Error(j.error||('HTTP '+r.status));
-    aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;document.getElementById('photoImg').src=aiURL;
+    aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;setPhoto(aiURL,true);
     const sh=document.getElementById('photoShow');sh.hidden=false;sh.textContent='3D ხედი';
     photoSay('რეალისტური ფოტო მზადაა. AI ზოგჯერ წვრილმანებს ცვლის, ზომები და დეტალები ზუსტია მხოლოდ დეტალირებაში.');return true;}
   catch(e){photoSay('AI ფოტო ვერ შეიქმნა: '+(e&&e.message||'შეცდომა')+'. სცადე თავიდან.');return false;}
   finally{w.hidden=true;ai.disabled=false;}
 }
-async function photoDownload(){
-  const url=document.getElementById('photoImg').src;if(!url)return;const blob=await (await fetch(url)).blob();
-  const nm=(S.client||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'foto';const name=`novora-${nm}-${stampNow()}${url===aiURL?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
-  await saveBlob(name,blob,photoSay);
-}
+function photoDownload(){document.getElementById('photoDl').click();}
 async function exportCsv(){
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){}
   const d=new Date(),stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
