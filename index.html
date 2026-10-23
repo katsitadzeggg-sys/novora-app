@@ -202,6 +202,29 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
 .ai-hints{display:flex;gap:6px;flex-wrap:wrap}
 .ai-hints button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;min-height:36px}
 
+.gate[hidden]{display:none}
+.gate{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top)) 16px 32px}
+.gate-in{width:min(460px,100%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 20px;display:flex;flex-direction:column;gap:12px;margin-top:4vh}
+.gate-in.wide{width:min(1100px,100%)}
+.gate-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.gate-brand{font-family:var(--display);letter-spacing:.32em;font-size:20px}
+.gate-in h2{margin:0}
+.gform{display:flex;flex-direction:column;gap:12px}
+.gform label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.gform input,.gform textarea{min-height:52px;padding:0 14px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:17px;background:#fff;color:var(--ink)}
+.gform textarea{padding:12px 14px;min-height:90px}
+.gform .primary,.gate .actions .primary{min-height:56px;border-radius:6px;border:0;background:var(--accent);color:var(--accent-ink);font-size:17px;font-weight:600}
+.gform .primary:disabled{opacity:.6}
+.gswitch{margin:0;font-size:15px;color:var(--muted)}
+.gswitch button{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;text-decoration:underline;padding:4px}
+.gphoto{width:100%;border-radius:6px;display:block}
+.stars{display:flex;gap:6px}
+.stars button{width:52px;height:52px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:26px;color:#C9CCC8}
+.stars button.on{color:#D9A21B;border-color:#D9A21B}
+.alist{display:flex;flex-direction:column;gap:8px}
+.arow{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.arow .pbtns button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pstat{grid-column:1/-1;font-size:13px;color:var(--accent)}
 .photo[hidden]{display:none}
 .photo{position:fixed;inset:0;background:rgba(29,35,33,.6);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
 .photo-in{width:min(1180px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
@@ -249,6 +272,8 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
     <div class="brand">NOVORA</div>
     <div class="proj"><b id="pName">ახალი პროექტი</b><small id="pState">არ არის შენახული</small></div>
     <div class="hdr-actions">
+      <button class="ghost" id="btnAdmin" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg><span>ადმინი</span></button>
+      <button class="ghost" id="btnMe" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>ანგარიში</span></button>
       <button class="ghost" id="btnList" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>პროექტები</span></button>
       <button class="ghost" id="btnNew" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>ახალი</span></button>
       <button class="ghost solid" id="btnSave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span>შენახვა</span></button>
@@ -1477,12 +1502,15 @@ try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{});}catc
 function toast(msg){const t=document.getElementById('toast');if(t){t.textContent=msg;}else{const s=document.getElementById('pState');s.textContent=msg;}}
 function newProject(){selMod=null;setOpen(false);S=JSON.parse(JSON.stringify(DEFAULTS));S.n=autoN(S);curId=null;dirty=false;lastSaved=null;step=0;setView('angle');build();render();}
 
-/* ---------- storage: shared db, else this device ---------- */
+/* ---------- storage: Novora cloud (hosted app), shared db (Claude), else this device ---------- */
+const SB_URL='https://hzsoschqllsnbwsbufqd.supabase.co',SB_KEY='sb_publishable_efvDDxySi05vrJ6Zp6304A_-cjDdVUG';
+const HOSTED=!window.claude&&/^https?:/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname);
 let db=null,col=null,projects=[],useLocal=false;
 const LKEY='novora-projects';
 function localLoad(){try{return JSON.parse(localStorage.getItem(LKEY)||'[]');}catch(_){return [];}}
 function localStore(list){try{localStorage.setItem(LKEY,JSON.stringify(list));return true;}catch(_){return false;}}
 (async()=>{
+  if(HOSTED){renderList();return;}
   try{db=window.claude&&window.claude.use?await window.claude.use('db'):null;}catch(_){db=null;}
   if(db){
     col=db.collection('projects');
@@ -1492,15 +1520,17 @@ function localStore(list){try{localStorage.setItem(LKEY,JSON.stringify(list));re
 let saving=false;
 async function save(){
   if(saving)return;saving=true;
-  if(!curId)curId='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  if(!curId&&!(sb&&me))curId='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const R=calc();
   const body={name:projName(S),client:S.client,phone:S.phone,address:S.address,type:S.type,size:`${S.w} × ${heightMm()} × ${depthMm()}`,parts:R.cnt,state:JSON.parse(JSON.stringify(S)),updatedAt:Date.now()};
   try{
-    if(col){await col.doc(curId).set(body);}
+    if(sb&&me){await cloudSave(body);}
+    else if(col){await col.doc(curId).set(body);}
     else{const list=localLoad().filter(p=>p.id!==curId);list.push(Object.assign({id:curId},body));if(!localStore(list))throw new Error('local');projects=list.sort((a,b)=>b.updatedAt-a.updatedAt);renderList();}
     dirty=false;lastSaved=body.updatedAt;renderHeader();toast('შენახულია.');
   }catch(err){
     const code=err&&err.code;
+    if(sb&&me&&/row-level security|permission|42501/i.test(String(err&&(err.message||err.code)))){toast('ვერ შეინახა: ლიცენზია არ არის აქტიური.');renderHeader();return;}
     toast(code==='quota_exceeded'?'ვერ შეინახა: ადგილი შეივსო. წაშალე ძველი პროექტები.':code==='invalid_argument'?'ვერ შეინახა: ამ ბმულზე შენახვის უფლება არ გაქვს.':'ვერ შეინახა. შეამოწმე ინტერნეტი და სცადე ხელახლა.');
     renderHeader();
   }finally{saving=false;}
@@ -1512,23 +1542,26 @@ document.getElementById('btnList').onclick=()=>{confirmDel=null;renderList();$sh
 document.getElementById('sheetClose').onclick=()=>{$sheet.hidden=true;};
 $sheet.addEventListener('click',e=>{if(e.target===$sheet)$sheet.hidden=true;});
 function renderList(){
-  document.getElementById('storageNote').textContent=useLocal?'პროექტები ინახება მხოლოდ ამ მოწყობილობაზე.':'პროექტები ინახება Novora-ს საერთო ბაზაში: ჩანს ყველა მოწყობილობაზე, სადაც ეს ბმული გაიხსნება.';
+  document.getElementById('storageNote').textContent=HOSTED?(me?'პროექტები ინახება თქვენს ანგარიშზე: '+(me.email||''):'შედით ანგარიშში.'):useLocal?'პროექტები ინახება მხოლოდ ამ მოწყობილობაზე.':'პროექტები ინახება Novora-ს საერთო ბაზაში: ჩანს ყველა მოწყობილობაზე, სადაც ეს ბმული გაიხსნება.';
   if(!projects.length){$plist.innerHTML='<div class="empty">ჯერ შენახული პროექტი არ არის.<br>შეავსე ზომები და დააჭირე „შენახვა“.</div>';return;}
   $plist.innerHTML=projects.map(p=>`<div class="pitem ${p.id===curId?'cur':''}">
     <button type="button" class="open" data-open="${esc(p.id)}"><b>${esc(p.name||'უსახელო')}</b><span>${esc(p.size||'')} მმ · ${new Date(p.updatedAt||0).toLocaleDateString('ka-GE')}${p.phone?' · '+esc(p.phone):''}</span></button>
-    <div class="pbtns"><button type="button" data-copy="${esc(p.id)}">ასლი</button><button type="button" class="${confirmDel===p.id?'confirm':'danger'}" data-del="${esc(p.id)}">${confirmDel===p.id?'წავშალო?':'წაშლა'}</button></div>
+    ${HOSTED&&me?`<div class="pstat">${p.confirmed?`დადასტურებული ${'★'.repeat(p.rating||0)}`:p.done?'დასრულებული · ელოდება დამკვეთის დადასტურებას':'მიმდინარე'}</div>`:''}
+    <div class="pbtns">${HOSTED&&me&&!p.confirmed?(p.done?`<button type="button" data-clink="${esc(p.id)}">ბმული დამკვეთს</button>`:`<button type="button" data-fin="${esc(p.id)}">დასრულება + ფოტო</button>`):''}<button type="button" data-copy="${esc(p.id)}">ასლი</button><button type="button" class="${confirmDel===p.id?'confirm':'danger'}" data-del="${esc(p.id)}">${confirmDel===p.id?'წავშალო?':'წაშლა'}</button></div>
   </div>`).join('');
 }
 $plist.addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   const find=id=>projects.find(p=>p.id===id);
+  if(b.dataset.fin){const p=find(b.dataset.fin);if(p)pickFinalPhoto(p);return;}
+  if(b.dataset.clink){const p=find(b.dataset.clink);if(p)shareConfirm(p);return;}
   if(b.dataset.open){const p=find(b.dataset.open);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=p.id;dirty=false;lastSaved=p.updatedAt;step=6;$sheet.hidden=true;setView('angle');build();render();return;}
   if(b.dataset.copy){const p=find(b.dataset.copy);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=null;dirty=true;lastSaved=null;step=0;$sheet.hidden=true;build();render();return;}
   if(b.dataset.del){
     const id=b.dataset.del;
     if(confirmDel!==id){confirmDel=id;renderList();return;}
     confirmDel=null;
-    try{if(col)await col.doc(id).delete();else{const list=localLoad().filter(p=>p.id!==id);localStore(list);projects=list;renderList();}}catch(_){}
+    try{if(sb&&me)await cloudDelete(id);else if(col)await col.doc(id).delete();else{const list=localLoad().filter(p=>p.id!==id);localStore(list);projects=list;renderList();}}catch(_){}
     if(id===curId){curId=null;dirty=true;renderHeader();}
   }
 });
@@ -1678,6 +1711,8 @@ function brand(d){return new Promise(res=>{const im=new Image();im.onload=()=>{t
   const txt='NOVORA',tw=g.measureText(txt).width;const x=W-pad-tw,y=H-pad;
   const sx=Math.round(fs*.55);g.fillStyle='rgba(20,18,16,.38)';const r=Math.round(fs*.3);g.beginPath();if(g.roundRect)g.roundRect(x-sx,y-fs*1.15,tw+sx*2,fs*1.6,r);else g.rect(x-sx,y-fs*1.15,tw+sx*2,fs*1.6);g.fill();
   g.fillStyle='rgba(255,255,255,.94)';g.textBaseline='alphabetic';g.fillText(txt,x,y);
+  if(me&&(me.name||me.email)){try{g.letterSpacing='0px';}catch(_){}const fs2=Math.round(fs*.5);g.font=`500 ${fs2}px "Noto Sans Georgian", system-ui, sans-serif`;const t2='ოსტატი: '+(me.name||me.email)+(me.phone?' · '+me.phone:'');const w2=g.measureText(t2).width;
+    g.fillStyle='rgba(20,18,16,.38)';g.fillRect(pad-fs2*.6,y-fs2*1.3,w2+fs2*1.2,fs2*1.8);g.fillStyle='rgba(255,255,255,.92)';g.fillText(t2,pad,y-fs2*.1);}
   res(c.toDataURL('image/jpeg',.92));}catch(_){res(d);}};im.onerror=()=>res(d);im.src=d;});}
 let showingAi=false;
 async function setPhoto(d,ai){
@@ -1705,7 +1740,7 @@ async function genPhoto(){
 }
 async function aiPhoto(){
   const ai=document.getElementById('photoAi'),w=document.getElementById('photoWait');if(ai.disabled)return;ai.disabled=true;w.hidden=false;photoSay('');
-  try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt(),quality:photoQ})});
+  try{const tk=await cloudToken();const r=await fetch('/api/photo',{method:'POST',headers:Object.assign({'content-type':'application/json'},tk?{authorization:'Bearer '+tk}:{}),body:JSON.stringify({image:shotURL,prompt:photoPrompt(),quality:photoQ})});
     let j={};try{j=await r.json();}catch(_){}
     if(!r.ok||!j.b64)throw new Error(j.error||('HTTP '+r.status));
     aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;await setPhoto(aiURL,true);
@@ -1808,6 +1843,164 @@ body (კორპუსი, მხოლოდ LAM): ${colorsFor('lam').map(c=>
   }catch(e){wait.textContent=e&&e.code==='not_granted'?'AI ასისტენტი გამორთულია. ჩართვა შეგიძლია გვერდის ნებართვებიდან.':e&&e.code==='rate_limited'?'ცოტა მოიცადე და ისევ სცადე.':'ვერ შევასრულე. სცადე სხვა სიტყვებით.';}
   finally{aiBusy=false;}
 }
+/* ---------- Novora cloud: master accounts, licence, devices, projects, client confirmation, admin (hosted app only) ---------- */
+let sb=null,me=null,beat=null,gateMode=null,adminRows=[],confirmTok=null;
+const isUuid=s=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s||''));
+const $gate=document.createElement('div');$gate.className='gate';$gate.id='gate';$gate.hidden=true;document.body.appendChild($gate);
+function deviceId(){let d=null;try{d=localStorage.getItem('novora-device');}catch(_){}if(!d){d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);try{localStorage.setItem('novora-device',d);}catch(_){}}return d;}
+function deviceLabel(){const u=navigator.userAgent;return /iPad/.test(u)?'iPad':/iPhone/.test(u)?'iPhone':/Android/.test(u)?(/Mobile/.test(u)?'Android ტელეფონი':'Android პლანშეტი'):/Windows/.test(u)?'Windows':/Mac/.test(u)?'Mac':'მოწყობილობა';}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+const authErr=e=>{const m=String(e&&e.message||e||'');return /Invalid login/i.test(m)?'ელფოსტა ან პაროლი არასწორია.':/already registered|already been registered/i.test(m)?'ეს ელფოსტა უკვე რეგისტრირებულია. შედით.':/at least 6/i.test(m)?'პაროლი მინიმუმ 6 სიმბოლო უნდა იყოს.':/valid email|invalid format/i.test(m)?'ელფოსტა არასწორადაა ჩაწერილი.':/rate limit/i.test(m)?'ბევრი მცდელობაა. სცადეთ ცოტა ხანში.':/fetch|network/i.test(m)?'ინტერნეტი ვერ დაკავშირდა. სცადეთ ხელახლა.':m||'შეცდომა. სცადეთ ხელახლა.';};
+
+function gateCard(inner){return `<div class="gate-in"><div class="gate-brand">NOVORA</div>${inner}</div>`;}
+function renderGate(mode,msg){
+  gateMode=mode;$gate.hidden=!mode;if(!mode){$gate.innerHTML='';return;}
+  let h='';
+  if(mode==='loading')h=gateCard('<p class="lede">იტვირთება…</p>');
+  else if(mode==='login')h=gateCard(`<h2>შესვლა</h2><p class="lede">ოსტატის ანგარიში</p>
+    <form id="fLogin" class="gform"><label>ელფოსტა<input name="email" type="email" autocomplete="email" required></label>
+    <label>პაროლი<input name="password" type="password" autocomplete="current-password" required minlength="6"></label>
+    <p class="warn" ${msg?'':'hidden'}>${esc(msg||'')}</p><button class="primary" type="submit">შესვლა</button></form>
+    <p class="gswitch">ანგარიში არ გაქვთ? <button type="button" data-gate="register">რეგისტრაცია</button></p>`);
+  else if(mode==='register')h=gateCard(`<h2>რეგისტრაცია</h2><p class="lede">რეგისტრაციის შემდეგ Novora ჩაგირთავთ ლიცენზიას.</p>
+    <form id="fReg" class="gform"><label>სახელი, გვარი<input name="full_name" required autocomplete="name"></label>
+    <label>ტელეფონი<input name="phone" type="tel" required autocomplete="tel" placeholder="5XX XX XX XX"></label>
+    <label>ქალაქი<input name="city" autocomplete="address-level2" placeholder="თბილისი"></label>
+    <label>ელფოსტა<input name="email" type="email" required autocomplete="email"></label>
+    <label>პაროლი (მინ. 6 სიმბოლო)<input name="password" type="password" required minlength="6" autocomplete="new-password"></label>
+    <p class="warn" ${msg?'':'hidden'}>${esc(msg||'')}</p><button class="primary" type="submit">რეგისტრაცია</button></form>
+    <p class="gswitch">უკვე გაქვთ ანგარიში? <button type="button" data-gate="login">შესვლა</button></p>`);
+  else if(mode==='pending')h=gateCard(`<h2>ლიცენზია ჯერ არ არის ჩართული</h2><p class="lede">${esc(me&&me.name||'')}, თქვენი ანგარიში შექმნილია${me&&me.until&&me.plan!=='trial'?', ლიცენზიის ვადა გასულია ('+esc(me.until)+')':''}. აპით სარგებლობისთვის Novora-მ ლიცენზია უნდა ჩაგირთოთ.</p>
+    <p class="lede">დაგვიკავშირდით და დააზუსტეთ: <b>${esc(me&&me.email||'')}</b></p>
+    <div class="actions"><button type="button" class="primary" data-gate="recheck">შემოწმება</button><button type="button" data-gate="logout">გამოსვლა</button></div>`);
+  else if(mode==='kicked')h=gateCard(`<h2>ანგარიში სხვა მოწყობილობაზე გაიხსნა</h2><p class="lede">ერთი ლიცენზიით ერთდროულად მაქსიმუმ 2 მოწყობილობაზე მუშაობა შეიძლება. თუ ეს თქვენ ხართ, თავიდან შედით.</p><div class="actions"><button type="button" class="primary" data-gate="login">შესვლა</button></div>`);
+  else if(mode==='confirm')h=gateCard(msg||'<p class="lede">იტვირთება…</p>');
+  else if(mode==='admin')h=`<div class="gate-in wide"><div class="gate-head"><div class="gate-brand">NOVORA · ადმინი</div><button type="button" class="ghost" data-gate="close">დახურვა</button></div>${adminHtml()}</div>`;
+  $gate.innerHTML=h;
+}
+$gate.addEventListener('submit',async e=>{
+  e.preventDefault();const f=e.target,d=Object.fromEntries(new FormData(f).entries()),btn=f.querySelector('button[type=submit]');btn.disabled=true;
+  try{
+    if(f.id==='fLogin'){const {error}=await sb.auth.signInWithPassword({email:d.email.trim(),password:d.password});if(error)throw error;await afterLogin();}
+    else if(f.id==='fReg'){const {data,error}=await sb.auth.signUp({email:d.email.trim(),password:d.password,options:{data:{full_name:d.full_name.trim(),phone:d.phone.trim(),city:(d.city||'').trim()}}});if(error)throw error;
+      if(!data.session){const r=await sb.auth.signInWithPassword({email:d.email.trim(),password:d.password});if(r.error)throw r.error;}await afterLogin();}
+    else if(f.id==='fConfirm'){const r=+d.rating;if(!r){f.querySelector('.warn').hidden=false;f.querySelector('.warn').textContent='აირჩიეთ შეფასება (1–5 ვარსკვლავი).';btn.disabled=false;return;}
+      const {data,error}=await sb.rpc('confirm_project',{p_token:confirmTok,p_rating:r,p_review:(d.review||'').trim()||null});if(error)throw error;
+      renderGate('confirm',data?'<h2>მადლობა!</h2><p class="lede">ნამუშევარი დადასტურებულია და შეფასება ოსტატის რეიტინგში ჩაითვალა.</p>':'<h2>უკვე დადასტურებულია</h2><p class="lede">ეს ნამუშევარი უკვე შეფასებულია.</p>');}
+  }catch(err){const w=f.querySelector('.warn');if(w){w.hidden=false;w.textContent=authErr(err);}btn.disabled=false;}
+});
+$gate.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.star){const v=+b.dataset.star;$gate.querySelectorAll('[data-star]').forEach(x=>x.classList.toggle('on',+x.dataset.star<=v));$gate.querySelector('input[name=rating]').value=v;return;}
+  const g=b.dataset.gate;
+  if(g==='login'||g==='register'){if(g==='login'&&gateMode==='kicked'){await sb.auth.signOut().catch(()=>{});}renderGate(g);return;}
+  if(g==='logout'){await logout();return;}
+  if(g==='recheck'){await afterLogin();return;}
+  if(g==='close'){renderGate(null);return;}
+  const a=b.dataset.adm;if(a){const [act,id]=a.split(':');await adminAct(act,id);return;}
+});
+
+async function initCloud(){
+  const q=new URLSearchParams(location.search);confirmTok=q.get('c');
+  renderGate(confirmTok?'confirm':'loading');
+  try{await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');}
+  catch(_){renderGate('confirm','<h2>ინტერნეტი ვერ დაკავშირდა</h2><p class="lede">შეამოწმეთ კავშირი და განაახლეთ გვერდი.</p>');return;}
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  if(confirmTok){await showConfirm();return;}
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session)await afterLogin();else renderGate('login');
+}
+async function afterLogin(){
+  renderGate('loading');
+  const {data,error}=await sb.rpc('claim_device',{p_device:deviceId(),p_label:deviceLabel()});
+  if(error){const {data:s}=await sb.auth.getSession();renderGate('login',s&&s.session?'ვერ დაკავშირდა: '+authErr(error):'');return;}
+  const {data:u}=await sb.auth.getUser();me=Object.assign({id:u&&u.user&&u.user.id},data);
+  if(!data.license){renderGate('pending');return;}
+  renderGate(null);showMe();await loadProjects();
+  clearInterval(beat);beat=setInterval(heartbeat,90000);
+}
+async function heartbeat(){
+  if(!sb||!me)return;const {data,error}=await sb.rpc('device_ok',{p_device:deviceId()});if(error)return;
+  if(!data.device){clearInterval(beat);renderGate('kicked');}else if(!data.license){clearInterval(beat);me.license=false;renderGate('pending');}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&sb&&me&&me.license)heartbeat();});
+async function logout(){clearInterval(beat);try{await sb.auth.signOut();}catch(_){}me=null;projects=[];renderList();showMe();renderGate('login');}
+function showMe(){
+  const b=document.getElementById('btnMe'),a=document.getElementById('btnAdmin');
+  if(b){b.hidden=!me;if(me)b.querySelector('span').textContent=me.name||me.email||'ანგარიში';}
+  if(a)a.hidden=!(me&&me.role==='admin');
+}
+async function cloudToken(){if(!sb)return null;const {data}=await sb.auth.getSession();return data&&data.session?data.session.access_token:null;}
+
+/* projects in the cloud */
+async function loadProjects(){
+  const {data,error}=await sb.from('projects').select('id,title,status,state,summary,updated_at,done_at,confirmed_at,rating,confirm_token,final_path').order('updated_at',{ascending:false}).limit(300);
+  if(error){toast('პროექტები ვერ ჩაიტვირთა.');return;}
+  projects=data.map(p=>({id:p.id,name:p.title,phone:p.state&&p.state.phone,size:p.summary&&p.summary.size,updatedAt:Date.parse(p.updated_at),state:p.state,done:!!p.done_at,confirmed:!!p.confirmed_at,rating:p.rating,token:p.confirm_token,final:p.final_path}));
+  renderList();
+}
+async function cloudSave(body){
+  const row={title:body.name,state:body.state,summary:{size:body.size,parts:body.parts,type:body.type}};
+  if(isUuid(curId)){const {error}=await sb.from('projects').update(row).eq('id',curId);if(error)throw error;}
+  else{const {data,error}=await sb.from('projects').insert(Object.assign({master_id:me.id},row)).select('id').single();if(error)throw error;curId=data.id;}
+  await loadProjects();
+}
+async function cloudDelete(id){const {error}=await sb.from('projects').delete().eq('id',id);if(error)throw error;await loadProjects();}
+function confirmUrl(p){return location.origin+'/?c='+p.token;}
+async function shareConfirm(p){
+  const url=confirmUrl(p),text=`${p.name}: გთხოვთ, დაადასტუროთ შესრულებული ნამუშევარი და შეაფასოთ ოსტატი.`;
+  try{if(navigator.share){await navigator.share({title:'NOVORA',text,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(text+' '+url);toast('ბმული დაკოპირდა. ჩასვით WhatsApp-ში ან Viber-ში.');}catch(_){prompt('დააკოპირეთ ბმული:',url);}
+}
+function pickFinalPhoto(p){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.setAttribute('capture','environment');
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+    try{toast('ფოტო იტვირთება…');const small=await shrinkImage(f,2000);const path=`${me.id}/${p.id}.jpg`;
+      const up=await sb.storage.from('finals').upload(path,small,{upsert:true,contentType:'image/jpeg'});if(up.error)throw up.error;
+      const {error}=await sb.from('projects').update({done_at:new Date().toISOString(),final_path:path,status:'done'}).eq('id',p.id);if(error)throw error;
+      await loadProjects();const np=projects.find(x=>x.id===p.id);toast('დასრულებულია. გაუგზავნეთ ბმული დამკვეთს.');if(np)shareConfirm(np);}
+    catch(err){toast('ვერ აიტვირთა: '+authErr(err));}};
+  inp.click();
+}
+function shrinkImage(file,max){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?res(b):rej(new Error('image')),'image/jpeg',.88);URL.revokeObjectURL(im.src);};im.onerror=rej;im.src=URL.createObjectURL(file);});}
+
+/* client confirmation page (no account) */
+async function showConfirm(){
+  const {data,error}=await sb.rpc('project_public',{p_token:isUuid(confirmTok)?confirmTok:'00000000-0000-0000-0000-000000000000'});
+  if(error||!data){renderGate('confirm','<h2>ბმული არ მოიძებნა</h2><p class="lede">შეამოწმეთ ბმული ან დაუკავშირდით ოსტატს.</p>');return;}
+  const img=data.final_path?`<img class="gphoto" src="${SB_URL}/storage/v1/object/public/finals/${esc(data.final_path)}" alt="შესრულებული ნამუშევარი">`:'';
+  const who=`<p class="lede">ოსტატი: <b>${esc(data.master||'')}</b>${data.city?' · '+esc(data.city):''}</p>`;
+  if(data.confirmed){renderGate('confirm',`<h2>${esc(data.title)}</h2>${who}${img}<p class="lede">ნამუშევარი დადასტურებულია. შეფასება: ${'★'.repeat(data.rating||0)}</p>`);return;}
+  if(!data.done){renderGate('confirm',`<h2>${esc(data.title)}</h2>${who}<p class="lede">ოსტატს ნამუშევარი ჯერ არ დაუსრულებია.</p>`);return;}
+  renderGate('confirm',`<h2>${esc(data.title)}</h2>${who}${img}
+    <form id="fConfirm" class="gform"><span class="sub">ნამუშევრის შეფასება</span><div class="stars">${[1,2,3,4,5].map(i=>`<button type="button" data-star="${i}" aria-label="${i} ვარსკვლავი">★</button>`).join('')}</div><input type="hidden" name="rating" value="">
+    <label>კომენტარი (არასავალდებულო)<textarea name="review" maxlength="1000"></textarea></label><p class="warn" hidden></p>
+    <button class="primary" type="submit">ვადასტურებ, ნამუშევარი შესრულებულია</button></form>`);
+}
+
+/* admin */
+function adminHtml(){
+  if(!adminRows.length)return '<p class="lede">იტვირთება…</p>';
+  const today=new Date().toISOString().slice(0,10);
+  const lic=r=>r.role==='admin'?'ადმინი':r.plan==='active'&&(!r.plan_until||r.plan_until>=today)?`აქტიური${r.plan_until?' · '+r.plan_until+'-მდე':''}`:r.plan==='active'?`ვადაგასული · ${r.plan_until}`:'არ არის ჩართული';
+  const tot=adminRows.reduce((a,r)=>{a.n++;if(r.role!=='admin'&&r.plan==='active'&&(!r.plan_until||r.plan_until>=today))a.act++;a.done+=r.done;a.fees+=+r.fees_due;return a;},{n:0,act:0,done:0,fees:0});
+  return `<div class="sum"><div class="card"><small>ოსტატები</small><b>${tot.n}</b><span>აქტიური ლიცენზია: ${tot.act}</span></div><div class="card"><small>თვიური</small><b>${tot.act*100} ₾</b><span>100 ₾ × ${tot.act}</span></div><div class="card"><small>დასრულებული პროექტები</small><b>${tot.done}</b><span>გადასახდელი საკომისიო</span></div><div class="card"><small>საკომისიო</small><b>${tot.fees} ₾</b><span>30 ₾ პროექტზე</span></div></div>
+  <div class="alist">${adminRows.map(r=>`<div class="arow"><div><b>${esc(r.full_name||'—')}</b> <span class="note">${esc(r.email||'')}</span><br><span class="note">${esc(r.phone||'')}${r.city?' · '+esc(r.city):''} · ${lic(r)}</span>
+    <div class="note">პროექტები ${r.projects} · დასრულებული ${r.done} · დადასტურებული ${r.confirmed}${r.avg_rating?' · ★ '+r.avg_rating:''} · AI ${r.ai_month}/${r.ai_limit} · მოწყობილობა ${r.devices}${+r.fees_due?' · <b>ვალი '+r.fees_due+' ₾</b>':''}</div></div>
+    ${r.role==='admin'?'':`<div class="pbtns"><button type="button" class="primary" data-adm="month:${r.id}">+1 თვე</button><button type="button" class="danger" data-adm="off:${r.id}">გამორთვა</button>${+r.fees_due?`<button type="button" data-adm="paid:${r.id}">საკომისიო გადახდილია</button>`:''}</div>`}</div>`).join('')}</div>`;
+}
+async function openAdmin(){adminRows=[];renderGate('admin');const {data,error}=await sb.rpc('admin_masters');if(error){$gate.querySelector('.gate-in').insertAdjacentHTML('beforeend',`<p class="warn">${esc(authErr(error))}</p>`);return;}adminRows=data||[];renderGate('admin');}
+async function adminAct(act,id){
+  const r=adminRows.find(x=>x.id===id);if(!r)return;let res;
+  if(act==='month'){const base=r.plan==='active'&&r.plan_until&&new Date(r.plan_until)>new Date()?new Date(r.plan_until):new Date();base.setDate(base.getDate()+30);res=await sb.rpc('admin_set_license',{p_user:id,p_plan:'active',p_until:base.toISOString().slice(0,10)});}
+  else if(act==='off'){if(!confirm('გამოვრთო ლიცენზია: '+(r.full_name||r.email)+'?'))return;res=await sb.rpc('admin_set_license',{p_user:id,p_plan:'expired',p_until:new Date().toISOString().slice(0,10)});}
+  else if(act==='paid'){res=await sb.rpc('admin_mark_fees_paid',{p_user:id});}
+  if(res&&res.error){alert(authErr(res.error));return;}await openAdmin();
+}
+document.getElementById('btnAdmin').onclick=()=>openAdmin();
+document.getElementById('btnMe').onclick=()=>{if(confirm((me&&(me.name||me.email))+'\n\nგამოსვლა ანგარიშიდან?'))logout();};
+if(HOSTED)initCloud();
+
 window.NOVORA={get:()=>JSON.parse(JSON.stringify(S)),load:st=>{S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),st);normalize();curId=null;dirty=true;setView('angle');build();render();fitCamera(false);}};
 normalize();S.n=autoN(S);
 build();render();fitCamera(true);requestAnimationFrame(loop);

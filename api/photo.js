@@ -1,6 +1,7 @@
 // Novora: turns a 3D snapshot of the project into a photorealistic image.
 // Engines, first available wins: GEMINI_API_KEY (Google direct), OPENAI_API_KEY (gpt-image-1),
 // otherwise Vercel AI Gateway (AI_GATEWAY_API_KEY, or the deployment's own OIDC token: no key needed).
+const SB_URL = 'https://hzsoschqllsnbwsbufqd.supabase.co', SB_KEY = 'sb_publishable_efvDDxySi05vrJ6Zp6304A_-cjDdVUG';
 const ORIGIN_OK = /^https:\/\/(novora\.phillych\.ge|novora-konstruktori[\w-]*\.vercel\.app)(\/|$)/;
 
 module.exports = async (req, res) => {
@@ -15,6 +16,15 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'method not allowed' }); return; }
   const from = req.headers.origin || req.headers.referer || '';
   if (!ORIGIN_OK.test(from)) { res.status(403).json({ error: 'origin not allowed' }); return; }
+  // only signed-in masters with an active licence, within their monthly AI limit
+  const auth = String(req.headers.authorization || '');
+  if (!/^Bearer\s+\S+/.test(auth)) { res.status(401).json({ error: 'შედით ანგარიშში' }); return; }
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/rpc/use_ai', { method: 'POST', headers: { apikey: SB_KEY, authorization: auth, 'content-type': 'application/json' }, body: '{}' });
+    const u = await r.json().catch(() => ({}));
+    if (!r.ok) { res.status(401).json({ error: 'შედით ანგარიშში თავიდან' }); return; }
+    if (!u.ok) { res.status(403).json({ error: u.reason === 'limit' ? `ამ თვის AI ფოტოების ლიმიტი ამოიწურა (${u.used}/${u.limit})` : u.reason === 'license' ? 'ლიცენზია არ არის აქტიური' : 'შედით ანგარიშში' }); return; }
+  } catch (e) { res.status(502).json({ error: 'ანგარიშის შემოწმება ვერ მოხერხდა' }); return; }
   if (!gem && !oai && !gw) { res.status(503).json({ error: 'AI გასაღები არ არის დაყენებული' }); return; }
   let body = req.body || {};
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = {}; } }
