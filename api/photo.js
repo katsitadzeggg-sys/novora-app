@@ -7,6 +7,7 @@ module.exports = async (req, res) => {
   const gem = process.env.GEMINI_API_KEY, oai = process.env.OPENAI_API_KEY;
   // gateway runs only when switched on (AI_GATEWAY_ON=1) or a gateway key is set: it needs a card on the Vercel account
   const gw = process.env.AI_GATEWAY_API_KEY || (process.env.AI_GATEWAY_ON === '1' ? (req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN) : null);
+  console.log('photo', req.method, 'engine', gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : 'none', 'origin', req.headers.origin || req.headers.referer || '-');
   if (req.method === 'GET') {
     const engine = gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : null;
     res.status(200).json({ ready: !!engine, engine }); return;
@@ -48,6 +49,7 @@ module.exports = async (req, res) => {
     if (!r.ok) throw new Error((j.error && j.error.message) || 'HTTP ' + r.status);
     res.status(200).json({ b64: j.data[0].b64_json, format: 'jpeg' });
   } catch (e) {
+    console.error('photo failed', String((e && e.message) || e).slice(0, 300));
     res.status(502).json({ error: String((e && e.message) || e).slice(0, 300) });
   }
 };
