@@ -288,6 +288,7 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
   <div class="photo-in" role="dialog" aria-label="პროექტის ფოტო">
     <div class="sheet-head"><h2>პროექტის ფოტო</h2><button class="ghost" type="button" id="photoClose">დახურვა</button></div>
     <div class="photo-img"><img id="photoImg" alt="პროექტის ხედი"><div class="photo-wait" id="photoWait" hidden><span class="spin"></span>AI ქმნის რეალისტურ ფოტოს… 20–60 წამი</div></div>
+    <div id="photoStyles"></div>
     <p class="note" id="photoNote"></p>
     <div class="actions">
       <button type="button" class="primary" id="photoAi">რეალისტური ფოტო (AI)</button>
@@ -1416,6 +1417,7 @@ document.addEventListener('click',e=>{
   if(b.id==='openBtn'){setOpen(!openT);return;}
   if(b.id==='photoBtn'||b.id==='actPhoto'){openPhoto();return;}
   if(b.id==='photoClose'){document.getElementById('photo').hidden=true;return;}
+  if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;renderPStyles(true);return;}
   if(b.id==='photoAi'){aiPhoto();return;}
   if(b.id==='photoDl'){photoDownload();return;}
   if(b.id==='photoShow'){const im=document.getElementById('photoImg');im.src=im.src===shotURL&&aiURL?aiURL:shotURL;b.textContent=im.src===shotURL?'AI ფოტო':'3D ხედი';return;}
@@ -1551,7 +1553,12 @@ async function saveBlob(filename,blob,say){
   try{await dl.save({filename,data:blob});say('ფაილი ჩამოიტვირთა.');}catch(err){say(err&&err.code==='declined'?'ჩამოტვირთვა გაუქმდა.':'ფაილი ვერ ჩამოიტვირთა.');}
 }
 /* ---------- project photo: clean 3D render, then optional AI photoreal pass (/api/photo on the hosted app) ---------- */
-let shotURL=null,aiURL=null,aiReady=null;
+let shotURL=null,aiURL=null,aiReady=null,photoStyle='lux';
+const PSTYLES=[{id:'lux',n:'ლუქსი, საღამო',s:'როგორც შოურუმის კატალოგში'},{id:'day',n:'დღის სინათლე',s:'ნათელი, ბუნებრივი'},{id:'scandi',n:'მინიმალისტური',s:'სკანდინავიური, მსუბუქი'}];
+const PSTYLE_TXT={
+  lux:' Style: luxury showroom catalogue photo like premium European and Chinese kitchen brands. Evening mood with warm 2700K light: hidden LED strips glowing under the wall cabinets and inside shelves, a slim linear suspended pendant lamp, recessed ceiling downlights and a soft ceiling cove light. Large-format book-matched marble or sintered-stone backsplash and wall cladding, elegant dark-toned surroundings, subtle reflections on the floor, refined decor (a vase, a bowl, a few books), deep soft shadows, cinematic contrast, architectural visualization quality, ultra detailed.',
+  day:' Style: bright natural daylight from a window, airy and fresh, soft shadows, clean real-estate interior photo, a few tasteful decor items.',
+  scandi:' Style: Scandinavian minimal interior, light and calm, matte surfaces, light oak accents, linen textiles, a plant, soft diffuse daylight, editorial photo.'};
 function snapshot(){
   const pr=renderer.getPixelRatio(),oo=openOnly,hb=selBox&&selBox.visible;openOnly=null;applyOpen(0,true);if(selBox)selBox.visible=false;
   renderer.setPixelRatio(1);renderer.setSize(1536,1024,false);camera.aspect=1.5;camera.clearViewOffset();camera.updateProjectionMatrix();
@@ -1568,18 +1575,19 @@ function photoPrompt(){
   s+=` Carcass decor ${col(bc)}.`;if(S.type==='kitchen')s+=` Worktop: ${tp.id==='quartz'?'white quartz':tp.id==='concrete'?'grey concrete look':tp.id==='granite'?'black granite':'solid oak'}, ${S.tt} mm thick.`;
   s+=` Walls painted ${wl.hex}, floor ${flr.c?'laminate '+flr.c:'light oak laminate'} (${flr.hex}).`;
   if(S.type==='kitchen'&&S.ledc!=='off'&&S.upper)s+=` Warm LED strip under the wall cabinets.`;
-  return s+` Natural daylight, soft realistic shadows, real material textures, 24mm lens, high-end interior magazine photo, no people, no text, no watermark.`;
+  return s+` Keep the cabinet front colors, handles and worktop exactly as described.`+(PSTYLE_TXT[photoStyle]||'')+` Real material textures, 24mm lens, no people, no text, no logos, no watermark.`;
 }
 async function checkAi(){
   if(aiReady!==null)return aiReady;if(!/^https?:/.test(location.protocol)||window.claude){aiReady=false;return false;}
   try{const r=await fetch('/api/photo',{cache:'no-store'});const j=await r.json();aiReady=!!(r.ok&&j.ready);}catch(_){aiReady=false;}return aiReady;
 }
+function renderPStyles(ok){document.getElementById('photoStyles').innerHTML=ok?`<span class="sub">ფოტოს სტილი</span>`+segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle):'';}
 function photoSay(t){document.getElementById('photoNote').textContent=t;}
 async function openPhoto(){
   if(qPart)closeQuick();shotURL=snapshot();aiURL=null;const im=document.getElementById('photoImg');im.src=shotURL;
   document.getElementById('photo').hidden=false;document.getElementById('photoShow').hidden=true;document.getElementById('photoWait').hidden=true;
   const ai=document.getElementById('photoAi');ai.disabled=false;photoSay('ეს არის 3D ხედი იმავე კუთხიდან, საიდანაც ახლა უყურებ. კუთხე შეცვალე 3D-ში და ისევ დააჭირე „ფოტო“.');
-  const ok=await checkAi();ai.hidden=!ok;
+  const ok=await checkAi();ai.hidden=!ok;renderPStyles(ok);
   if(!ok)photoSay(window.claude?'რეალისტური AI ფოტო მუშაობს novora.phillych.ge-ზე. აქ შეგიძლია 3D ხედის ჩამოტვირთვა.':'რეალისტური AI ფოტოსთვის საჭიროა AI გასაღების ჩართვა (Vercel-ში). მანამდე შეგიძლია 3D ხედის ჩამოტვირთვა.');
 }
 async function aiPhoto(){
