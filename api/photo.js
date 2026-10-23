@@ -5,7 +5,8 @@ const ORIGIN_OK = /^https:\/\/(novora\.phillych\.ge|novora-konstruktori[\w-]*\.v
 
 module.exports = async (req, res) => {
   const gem = process.env.GEMINI_API_KEY, oai = process.env.OPENAI_API_KEY;
-  const gw = process.env.AI_GATEWAY_API_KEY || req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN;
+  // gateway runs only when switched on (AI_GATEWAY_ON=1) or a gateway key is set: it needs a card on the Vercel account
+  const gw = process.env.AI_GATEWAY_API_KEY || (process.env.AI_GATEWAY_ON === '1' ? (req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN) : null);
   if (req.method === 'GET') {
     const engine = gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : null;
     if (req.query && req.query.test === '1' && engine === 'gateway') {

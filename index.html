@@ -584,7 +584,7 @@ stage.prepend(renderer.domElement);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#D9DBD6');
 const camera=new THREE.PerspectiveCamera(38,1,.05,60);
-scene.add(new THREE.HemisphereLight(0xffffff,0x8a8070,.62));
+const hemi=new THREE.HemisphereLight(0xffffff,0x8a8070,.62);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff1e2,1.05);
 sun.position.set(2.6,4.2,4.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-1,near:.5,far:14});
@@ -856,6 +856,7 @@ function build(){
         case 'tall':case 'tallOven':case 'fridge':case 'coffee':tallUnit(m,w,cx,i);break;
         default:carc(w,BH,Dc,cx,y0,m.t==='sink'?0:1);doors(w,cx,y0+BH/2,BH,zf,i);
       }
+      if(['doors','open','drawers','corner'].includes(m.t)&&hobAt!==run.key+':'+i&&w>=.4)(G.userData.spots=G.userData.spots||[]).push({g:HOST,x:cx,w,y:WT,main:!!run.main});
       if(m.t==='sink')sinkAt(w,cx);
       if(hobAt===run.key+':'+i)hobOn(cx);
     }
@@ -1372,7 +1373,7 @@ function render(){
     <div class="group"><span class="label">კუთხე</span>${segX([{id:'angle',n:'კუთხიდან'},{id:'front',n:'წინიდან'},{id:'close',n:'ახლოდან'}],x=>`data-view="${x.id}"`,x=>view===x.id)}</div>
     <div class="group"><span class="label">ფოტოს სტილი</span>${segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle)}</div>
     <div class="actions"><button type="button" class="primary" id="actGen">ფოტოს შექმნა და ჩამოტვირთვა</button><button type="button" id="actPhoto">მხოლოდ 3D ხედი</button></div>
-    <p class="note">რეალისტურ ფოტოს AI ქმნის 20–60 წამში 3D ხედის, ფერების და მასალების მიხედვით. ზუსტი ზომები დეტალირებაშია.</p>
+    <p class="note">ფოტო იქმნება აქვე, უფასოდ: სტუდიური განათება, მარმარილოს კედელი, ჭერის სანათები და დეკორი ემატება მხოლოდ ფოტოში, პროექტი არ იცვლება.</p>
     <p class="toast" id="toast" aria-live="polite"></p>`;
   }else{
     const Rr=calc(),plan=Rr.plan;
@@ -1422,9 +1423,10 @@ document.addEventListener('click',e=>{
     change();return;}
   if(b.id==='demoBtn'){runDemo();return;}
   if(b.id==='openBtn'){setOpen(!openT);return;}
-  if(b.id==='photoBtn'||b.id==='actPhoto'){openPhoto();return;}
+  if(b.id==='photoBtn'){openPhoto();return;}
+  if(b.id==='actPhoto'){openPhoto(step===7);return;}
   if(b.id==='photoClose'){document.getElementById('photo').hidden=true;return;}
-  if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;renderPStyles(!!aiReady);if(step===7)render();return;}
+  if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;if(step===7)render();if(!document.getElementById('photo').hidden){openPhoto();}return;}
   if(b.id==='actGen'){genPhoto();return;}
   if(b.id==='photoAi'){aiPhoto();return;}
   if(b.id==='photoDl'){photoDownload();return;}
@@ -1567,11 +1569,81 @@ const PSTYLE_TXT={
   lux:' Style: luxury showroom catalogue photo like premium European and Chinese kitchen brands. Evening mood with warm 2700K light: hidden LED strips glowing under the wall cabinets and inside shelves, a slim linear suspended pendant lamp, recessed ceiling downlights and a soft ceiling cove light. Large-format book-matched marble or sintered-stone backsplash and wall cladding, elegant dark-toned surroundings, subtle reflections on the floor, refined decor (a vase, a bowl, a few books), deep soft shadows, cinematic contrast, architectural visualization quality, ultra detailed.',
   day:' Style: bright natural daylight from a window, airy and fresh, soft shadows, clean real-estate interior photo, a few tasteful decor items.',
   scandi:' Style: Scandinavian minimal interior, light and calm, matte surfaces, light oak accents, linen textiles, a plant, soft diffuse daylight, editorial photo.'};
-function snapshot(){
+/* studio photo: temporary lighting, marble, ceiling downlights and decor, then a light bloom/vignette pass. Free, runs in the browser. */
+let marbleTx=null;
+function marbleTexture(){
+  if(marbleTx)return marbleTx;const c=document.createElement('canvas');c.width=c.height=1024;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,1024,1024);gr.addColorStop(0,'#F3F0EA');gr.addColorStop(.5,'#ECE7DF');gr.addColorStop(1,'#E2DCD2');g.fillStyle=gr;g.fillRect(0,0,1024,1024);
+  let seed=11;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+  for(let i=0;i<14;i++){const x=rnd()*1024,y=rnd()*1024,r=120+rnd()*260,cg=g.createRadialGradient(x,y,0,x,y,r);cg.addColorStop(0,`rgba(${200+rnd()*30|0},${190+rnd()*30|0},${175+rnd()*30|0},.22)`);cg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=cg;g.fillRect(0,0,1024,1024);}
+  const vein=(main)=>{let x=rnd()*1300-140,y=-80;const a=rnd()*.5-.25;g.beginPath();g.moveTo(x,y);
+    for(let k=0;k<16;k++){const nx=x+a*90+(rnd()-.5)*60,ny=y+70+rnd()*30;g.quadraticCurveTo(x+(rnd()-.5)*50,(y+ny)/2,nx,ny);x=nx;y=ny;}
+    try{g.filter=main?'blur(1.2px)':'blur(.6px)';}catch(_){}
+    g.strokeStyle=main?`rgba(150,135,118,${.28+rnd()*.2})`:`rgba(160,150,140,${.05+rnd()*.1})`;g.lineWidth=main?1.2+rnd()*1.6:.5+rnd()*.6;g.stroke();
+    if(main){try{g.filter='blur(6px)';}catch(_){}g.strokeStyle='rgba(185,160,125,.12)';g.lineWidth=14;g.stroke();}try{g.filter='none';}catch(_){}};
+  for(let i=0;i<40;i++)vein(false);for(let i=0;i<5;i++)vein(true);
+  marbleTx=new THREE.CanvasTexture(c);marbleTx.encoding=THREE.sRGBEncoding;marbleTx.wrapS=marbleTx.wrapT=THREE.RepeatWrapping;marbleTx.repeat.set(2,1.4);marbleTx.anisotropy=8;return marbleTx;
+}
+function stageOn(style){
+  const st={bg:scene.background.clone(),hemi:hemi.intensity,sun:sun.intensity,fill:fillL.intensity,exp:renderer.toneMappingExposure,wallMap:wallMat.map,wallCol:wallMat.color.clone(),floorR:floorMat.roughness,objs:[],lights:[],sm:sun.shadow.mapSize.x};
+  const lux=style==='lux',day=style==='day',ch=S.ch/1000,rw=S.rw/1000,rd=S.rd/1000;
+  const add=o=>{scene.add(o);st.objs.push(o);return o;};
+  scene.background=new THREE.Color(lux?'#2B2622':day?'#EEEBE4':'#E9E6E0');
+  hemi.intensity=lux?.22:day?.85:.7;sun.intensity=lux?.32:day?1.45:1.0;fillL.intensity=lux?.12:.4;renderer.toneMappingExposure=lux?1.18:1.08;
+  if(lux||S.type==='kitchen'){wallMat.map=marbleTexture();wallMat.color.set(lux?'#ffffff':'#fbfaf7');wallMat.needsUpdate=true;}
+  floorMat.roughness=lux?.32:.55;
+  if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}sun.shadow.mapSize.set(4096,4096);
+  /* ceiling + downlights */
+  if(S.type==='kitchen'||lux){const cm=new THREE.MeshStandardMaterial({color:new THREE.Color(lux?'#D9D4CC':'#F4F2EE').convertSRGBToLinear(),roughness:.9});const below=camera.position.y<ch-.05;
+    const ce=add(new THREE.Mesh(new THREE.PlaneGeometry(rw,rd),cm));ce.rotation.x=Math.PI/2;ce.position.set(0,ch,rd/2);
+    const glow=new THREE.MeshStandardMaterial({color:0xffffff,emissive:new THREE.Color(lux?'#FFD9A8':'#FFF4E4'),emissiveIntensity:1.4});
+    const n=Math.max(2,Math.round(rw/1.1)),zs=rd>2.4?[.85,Math.min(rd-.9,2.2)]:[.85];
+    zs.forEach(z=>{for(let k=0;k<n;k++){const x=-rw/2+rw*(k+.5)/n;if(below){const d=add(new THREE.Mesh(new THREE.CircleGeometry(.045,20),glow));d.rotation.x=Math.PI/2;d.position.set(x,ch-.004,z);}
+      if(z===zs[0]){const sp=new THREE.SpotLight(lux?0xffcf99:0xfff0dc,lux?2.2:1.0,ch+1.2,.72,.85,1.6);sp.position.set(x,ch-.03,z);sp.target.position.set(x,0,z-.25);add(sp);add(sp.target);}}});
+    if(lux&&below){const cove=add(new THREE.Mesh(new THREE.BoxGeometry(rw-.1,.02,.02),glow));cove.position.set(0,ch-.06,.03);}}
+  /* LED under wall cabinets and pendants brighter */
+  if(furniture)furniture.traverse(o=>{if(o.isPointLight){st.lights.push([o,o.intensity]);o.intensity*=lux?3.2:1.6;}});
+  /* decor on the worktop */
+  const sp=(furniture&&furniture.userData.spots)||[];
+  if(S.type==='kitchen'&&sp.length){const pick=[sp[0],sp[Math.floor(sp.length/2)],sp[sp.length-1]].filter((v,i,a)=>a.indexOf(v)===i);
+    const ceramic=new THREE.MeshStandardMaterial({color:new THREE.Color(lux?'#2D2B29':'#E8E3DA').convertSRGBToLinear(),roughness:.55});
+    const wood=new THREE.MeshStandardMaterial({color:new THREE.Color('#8A5E3B').convertSRGBToLinear(),roughness:.6});
+    const leaf=new THREE.MeshStandardMaterial({color:new THREE.Color('#4E6B3C').convertSRGBToLinear(),roughness:.8});
+    const fruit=new THREE.MeshStandardMaterial({color:new THREE.Color('#E8B93A').convertSRGBToLinear(),roughness:.5});
+    const book=['#7A2E2A','#C9B79C','#2F3B44','#D9D2C4'].map(c=>new THREE.MeshStandardMaterial({color:new THREE.Color(c).convertSRGBToLinear(),roughness:.8}));
+    const put=(s,o,dx,z)=>{o.position.x+=s.x+dx;o.position.y+=s.y;o.position.z+=z;o.castShadow=true;s.g.add(o);st.objs.push(o);return o;};
+    pick.forEach((s,i)=>{
+      if(i===0){const pts=[[0,0],[.05,0],[.07,.05],[.06,.16],[.035,.24],[.04,.27]].map(p=>new THREE.Vector2(p[0],p[1]));put(s,new THREE.Mesh(new THREE.LatheGeometry(pts,28),ceramic),-.05,.16);
+        for(let k=0;k<5;k++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.003,.004,.42,6),wood);b.rotation.z=(k-2)*.18;b.rotation.x=(k%2?.12:-.1);b.position.y=.42;put(s,b,-.05+(k-2)*.03,.16);
+          const lf=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),leaf);lf.scale.set(1,.5,1);lf.position.y=.6+k*.015;put(s,lf,-.05+(k-2)*.07,.16);}}
+      else if(i===1){const bowl=new THREE.Mesh(new THREE.SphereGeometry(.13,28,12,0,Math.PI*2,Math.PI/2,Math.PI/2),wood);bowl.position.y=.13;bowl.scale.y=.6;bowl.position.y=.08;bowl.material=wood.clone();bowl.material.side=THREE.DoubleSide;put(s,bowl,0,.3);
+        [[0,0],[.06,.03],[-.05,.04],[.02,-.06]].forEach(([dx,dz])=>{const f=new THREE.Mesh(new THREE.SphereGeometry(.035,16,12),fruit);f.position.y=.06;put(s,f,dx,.3+dz);});}
+      else{let y=0;[[.24,.03],[.22,.025],[.2,.035]].forEach(([w,t],k)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,t,.16),book[k]);b.position.y=y+t/2;b.rotation.y=(k-1)*.12;put(s,b,.05,.18);y+=t;});
+        const pot=new THREE.Mesh(new THREE.CylinderGeometry(.05,.04,.09,20),ceramic);pot.position.y=y+.045;put(s,pot,.05,.18);
+        for(let k=0;k<7;k++){const lf=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),leaf);lf.position.y=y+.12+Math.sin(k)*.03;put(s,lf,.05+Math.cos(k*2.1)*.045,.18+Math.sin(k*2.1)*.045);}}});}
+  return st;
+}
+function stageOff(st){
+  st.objs.forEach(o=>{if(o.parent)o.parent.remove(o);if(o.geometry)o.geometry.dispose();});
+  st.lights.forEach(([o,v])=>o.intensity=v);
+  scene.background=st.bg;hemi.intensity=st.hemi;sun.intensity=st.sun;fillL.intensity=st.fill;renderer.toneMappingExposure=st.exp;
+  wallMat.map=st.wallMap;wallMat.color.copy(st.wallCol);wallMat.needsUpdate=true;floorMat.roughness=st.floorR;
+  if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}sun.shadow.mapSize.set(st.sm,st.sm);
+}
+function postFx(src,style){
+  const W=src.width,H=src.height,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(src,0,0);
+  try{g.save();g.globalCompositeOperation='screen';g.globalAlpha=style==='lux'?.42:.2;g.filter='brightness(0.75) contrast(2.2) blur(18px)';g.drawImage(src,0,0);g.restore();}catch(_){}
+  const v=g.createRadialGradient(W/2,H*.48,H*.3,W/2,H/2,H*1.0);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(10,6,2,${style==='lux'?.55:.2})`);g.fillStyle=v;g.fillRect(0,0,W,H);
+  if(style==='lux'){g.globalCompositeOperation='soft-light';g.fillStyle='rgba(255,168,90,.22)';g.fillRect(0,0,W,H);g.globalCompositeOperation='source-over';}
+  return c.toDataURL('image/jpeg',.92);
+}
+function snapshot(style){
   const pr=renderer.getPixelRatio(),oo=openOnly,hb=selBox&&selBox.visible;openOnly=null;applyOpen(0,true);if(selBox)selBox.visible=false;
-  renderer.setPixelRatio(1);renderer.setSize(1536,1024,false);camera.aspect=1.5;camera.clearViewOffset();camera.updateProjectionMatrix();
+  const st=style?stageOn(style):null;
+  renderer.setPixelRatio(1);renderer.setSize(st?1920:1536,st?1280:1024,false);camera.aspect=1.5;camera.clearViewOffset();camera.updateProjectionMatrix();
   camera.position.set(cam.target.x+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta),cam.target.y+cam.r*Math.cos(cam.phi),cam.target.z+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta));camera.lookAt(cam.target);
-  renderer.render(scene,camera);const url=renderer.domElement.toDataURL('image/jpeg',.9);
+  renderer.render(scene,camera);const url=st?postFx(renderer.domElement,style):renderer.domElement.toDataURL('image/jpeg',.9);
+  if(st)stageOff(st);
   renderer.setPixelRatio(pr);resize();viewOff=-1;openOnly=oo;applyOpen(openA,true);if(selBox)selBox.visible=!!hb;return url;
 }
 function photoPrompt(){
@@ -1591,12 +1663,11 @@ async function checkAi(){
 }
 function renderPStyles(ok){document.getElementById('photoStyles').innerHTML=ok?`<span class="sub">ფოტოს სტილი</span>`+segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle):'';}
 function photoSay(t){document.getElementById('photoNote').textContent=t;}
-async function openPhoto(){
-  if(qPart)closeQuick();shotURL=snapshot();aiURL=null;const im=document.getElementById('photoImg');im.src=shotURL;
+async function openPhoto(plain){
+  if(qPart)closeQuick();shotURL=snapshot(plain?null:photoStyle);aiURL=null;const im=document.getElementById('photoImg');im.src=shotURL;
   document.getElementById('photo').hidden=false;document.getElementById('photoShow').hidden=true;document.getElementById('photoWait').hidden=true;
-  const ai=document.getElementById('photoAi');ai.disabled=false;photoSay('ეს არის 3D ხედი იმავე კუთხიდან, საიდანაც ახლა უყურებ. კუთხე შეცვალე 3D-ში და ისევ დააჭირე „ფოტო“.');
-  const ok=await checkAi();ai.hidden=!ok;renderPStyles(ok);
-  if(!ok)photoSay(window.claude?'რეალისტური AI ფოტო მუშაობს novora.phillych.ge-ზე. აქ შეგიძლია 3D ხედის ჩამოტვირთვა.':'რეალისტური AI ფოტოსთვის საჭიროა AI გასაღების ჩართვა (Vercel-ში). მანამდე შეგიძლია 3D ხედის ჩამოტვირთვა.');
+  const ai=document.getElementById('photoAi');ai.disabled=false;photoSay(plain?'3D ხედი, იმავე კუთხიდან.':'სტუდიური ფოტო ('+byId(PSTYLES,photoStyle).n+'), იმავე კუთხიდან. კუთხე ან სტილი შეცვალე და ისევ შექმენი.');
+  const ok=await checkAi();ai.hidden=!ok;renderPStyles(true);
 }
 async function genPhoto(){
   setOpen(false);openOnly=null;await new Promise(r=>setTimeout(r,700));
