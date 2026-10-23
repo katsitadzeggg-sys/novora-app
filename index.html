@@ -506,8 +506,8 @@ const FLOORS=[
 const colorsFor=m=>COLORS.filter(c=>c.g===m);
 const cName=c=>(c.c?c.c+' ':'')+c.n;
 const TOPS=[{id:'quartz',n:'თეთრი კვარცი',hex:'#E9E7E2'},{id:'concrete',n:'ბეტონი',hex:'#9A9893'},{id:'granite',n:'შავი გრანიტი',hex:'#262626'},{id:'oak',n:'მუხის მასივი',hex:'#B58E5B',wood:true}];
-const STEP_NAMES=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტურა','დეტალირება','რასკროი'];
-const STEP_SHORT=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტ.','დეტალები','რასკროი'];
+const STEP_NAMES=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტურა','დეტალირება','რასკროი','ფოტო'];
+const STEP_SHORT=['კლიენტი','ავეჯი','ზომები','მასალა','ფურნიტ.','დეტალები','რასკროი','ფოტო'];
 const LAST=STEP_NAMES.length-1;
 const DEFAULTS={type:'kitchen',w:3000,h:2400,d:600,n:5,upper:true,mirror:true,material:'lam',style:'flat',handle:'bar',hcolor:'black',front:'L156',body:'L001',top:'quartz',floor:'base',wall:'plaster',layout:'I',walls:2,rw:3600,rd:3000,wl:1800,wr:1800,wf:1800,ch:2700,openings:[],hw:'std',soft:true,lift:false,svc:['measure','delivery','install'],
   mods:{},plinth:100,bh:720,tt:40,ub:1450,uh:720,th:2170,sink:'single',sinkc:'steel',tap:'std',taph:300,hob:'gas4',hood:'built',ledc:'warm',pend:0,pendh:1900,
@@ -1295,7 +1295,7 @@ function renderQuick(){
 }
 function render(){
   $steps.innerHTML=STEP_NAMES.map((n,i)=>`<button type="button" data-goto="${i}" class="${i===step?'on':''} ${i<step?'done':''}" title="${n}"><b>${i+1}</b>${STEP_SHORT[i]}</button>`).join('');
-  $main.classList.toggle('wide',step>=5);
+  $main.classList.toggle('wide',step===5||step===6);
   const T=TYPES[S.type];let h='';
   if(step===0){
     h=`<h2>შეკვეთა</h2><p class="lede">ვისთვის კეთდება ავეჯი. შეგიძლია ცარიელიც დატოვო და მერე შეავსო.</p>
@@ -1367,6 +1367,13 @@ function render(){
     </div>
     <p class="toast" id="toast" aria-live="polite"></p>
     <textarea class="copybox" id="copybox" hidden readonly aria-label="დეტალირება ტექსტად"></textarea>`;
+  }else if(step===7){
+    h=`<h2>პროექტის ფოტო</h2><p class="lede">3D-ში დააყენე კუთხე (თითით მოატრიალე ან აირჩიე ქვემოთ), აირჩიე სტილი და დააჭირე „ფოტოს შექმნა“. ფოტო შეიქმნება და ჩამოიტვირთება.</p>
+    <div class="group"><span class="label">კუთხე</span>${segX([{id:'angle',n:'კუთხიდან'},{id:'front',n:'წინიდან'},{id:'close',n:'ახლოდან'}],x=>`data-view="${x.id}"`,x=>view===x.id)}</div>
+    <div class="group"><span class="label">ფოტოს სტილი</span>${segX(PSTYLES,x=>`data-pstyle="${x.id}"`,x=>x.id===photoStyle)}</div>
+    <div class="actions"><button type="button" class="primary" id="actGen">ფოტოს შექმნა და ჩამოტვირთვა</button><button type="button" id="actPhoto">მხოლოდ 3D ხედი</button></div>
+    <p class="note">რეალისტურ ფოტოს AI ქმნის 20–60 წამში 3D ხედის, ფერების და მასალების მიხედვით. ზუსტი ზომები დეტალირებაშია.</p>
+    <p class="toast" id="toast" aria-live="polite"></p>`;
   }else{
     const Rr=calc(),plan=Rr.plan;
     const tot=plan.reduce((a,p)=>a+p.sheets.length,0);
@@ -1417,7 +1424,8 @@ document.addEventListener('click',e=>{
   if(b.id==='openBtn'){setOpen(!openT);return;}
   if(b.id==='photoBtn'||b.id==='actPhoto'){openPhoto();return;}
   if(b.id==='photoClose'){document.getElementById('photo').hidden=true;return;}
-  if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;renderPStyles(true);return;}
+  if(b.dataset.pstyle){photoStyle=b.dataset.pstyle;renderPStyles(!!aiReady);if(step===7)render();return;}
+  if(b.id==='actGen'){genPhoto();return;}
   if(b.id==='photoAi'){aiPhoto();return;}
   if(b.id==='photoDl'){photoDownload();return;}
   if(b.id==='photoShow'){const im=document.getElementById('photoImg');im.src=im.src===shotURL&&aiURL?aiURL:shotURL;b.textContent=im.src===shotURL?'AI ფოტო':'3D ხედი';return;}
@@ -1508,7 +1516,7 @@ function renderList(){
 $plist.addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   const find=id=>projects.find(p=>p.id===id);
-  if(b.dataset.open){const p=find(b.dataset.open);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=p.id;dirty=false;lastSaved=p.updatedAt;step=LAST;$sheet.hidden=true;setView('angle');build();render();return;}
+  if(b.dataset.open){const p=find(b.dataset.open);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=p.id;dirty=false;lastSaved=p.updatedAt;step=6;$sheet.hidden=true;setView('angle');build();render();return;}
   if(b.dataset.copy){const p=find(b.dataset.copy);if(!p||!p.state)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),p.state);normalize();curId=null;dirty=true;lastSaved=null;step=0;$sheet.hidden=true;build();render();return;}
   if(b.dataset.del){
     const id=b.dataset.del;
@@ -1590,6 +1598,12 @@ async function openPhoto(){
   const ok=await checkAi();ai.hidden=!ok;renderPStyles(ok);
   if(!ok)photoSay(window.claude?'რეალისტური AI ფოტო მუშაობს novora.phillych.ge-ზე. აქ შეგიძლია 3D ხედის ჩამოტვირთვა.':'რეალისტური AI ფოტოსთვის საჭიროა AI გასაღების ჩართვა (Vercel-ში). მანამდე შეგიძლია 3D ხედის ჩამოტვირთვა.');
 }
+async function genPhoto(){
+  setOpen(false);openOnly=null;await new Promise(r=>setTimeout(r,700));
+  await openPhoto();
+  if(aiReady){const ok=await aiPhoto();if(ok)photoDownload();}
+  else photoDownload();
+}
 async function aiPhoto(){
   const ai=document.getElementById('photoAi'),w=document.getElementById('photoWait');if(ai.disabled)return;ai.disabled=true;w.hidden=false;photoSay('');
   try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt()})});
@@ -1597,13 +1611,13 @@ async function aiPhoto(){
     if(!r.ok||!j.b64)throw new Error(j.error||('HTTP '+r.status));
     aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;document.getElementById('photoImg').src=aiURL;
     const sh=document.getElementById('photoShow');sh.hidden=false;sh.textContent='3D ხედი';
-    photoSay('რეალისტური ფოტო მზადაა. AI ზოგჯერ წვრილმანებს ცვლის, ზომები და დეტალები ზუსტია მხოლოდ დეტალირებაში.');}
-  catch(e){photoSay('AI ფოტო ვერ შეიქმნა: '+(e&&e.message||'შეცდომა')+'. სცადე თავიდან.');}
+    photoSay('რეალისტური ფოტო მზადაა. AI ზოგჯერ წვრილმანებს ცვლის, ზომები და დეტალები ზუსტია მხოლოდ დეტალირებაში.');return true;}
+  catch(e){photoSay('AI ფოტო ვერ შეიქმნა: '+(e&&e.message||'შეცდომა')+'. სცადე თავიდან.');return false;}
   finally{w.hidden=true;ai.disabled=false;}
 }
 async function photoDownload(){
   const url=document.getElementById('photoImg').src;if(!url)return;const blob=await (await fetch(url)).blob();
-  const name=`novora-${(S.client||TYPES[S.type].n).replace(/[^\p{L}\p{N}]+/gu,'-')}-${stampNow()}${url===aiURL?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
+  const nm=(S.client||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'foto';const name=`novora-${nm}-${stampNow()}${url===aiURL?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
   await saveBlob(name,blob,photoSay);
 }
 async function exportCsv(){

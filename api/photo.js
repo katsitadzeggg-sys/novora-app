@@ -67,7 +67,7 @@ async function gateway(token, prompt, dataUrl) {
       body: JSON.stringify({ model, messages: [{ role: 'user', content }], modalities: ['text', 'image'], stream: false })
     });
     let j = {}; try { j = await r.json(); } catch (_) {}
-    if (!r.ok) { last = new Error((j.error && (j.error.message || j.error)) || 'HTTP ' + r.status); continue; }
+    if (!r.ok) { const msg = String((j.error && (j.error.message || j.error)) || 'HTTP ' + r.status); if (/credit card/i.test(msg)) throw new Error('AI-ს ჩასართავად Vercel-ში საბანკო ბარათია დასამატებელი (AI Gateway, უფასო კრედიტები)'); last = new Error(msg); continue; }
     const img = j.choices && j.choices[0] && j.choices[0].message && (j.choices[0].message.images || [])[0];
     const url = img && img.image_url && img.image_url.url;
     const m = /^data:image\/(\w+);base64,(.+)$/.exec(url || '');
