@@ -10,6 +10,7 @@ module.exports = async (req, res) => {
   console.log('photo', req.method, 'engine', gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : 'none', 'origin', req.headers.origin || req.headers.referer || '-');
   if (req.method === 'GET') {
     const engine = gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : null;
+    if (req.query && req.query.probe === 'nv7q2k' && gw) { try { const o = await gateway(gw, 'A small photorealistic wooden kitchen cabinet.', null, 'high'); res.status(200).json({ probe: o.model, bytes: o.b64.length }); } catch (e) { res.status(200).json({ probe: 'fail', error: String(e.message || e) }); } return; }
     res.status(200).json({ ready: !!engine, engine }); return;
   }
   if (req.method !== 'POST') { res.status(405).json({ error: 'method not allowed' }); return; }
@@ -65,11 +66,11 @@ async function gateway(token, prompt, dataUrl, quality) {
       body: JSON.stringify({ model, messages: [{ role: 'user', content }], modalities: ['text', 'image'], stream: false })
     });
     let j = {}; try { j = await r.json(); } catch (_) {}
-    if (!r.ok) { const msg = String((j.error && (j.error.message || j.error)) || 'HTTP ' + r.status); if (/free tier/i.test(msg)) throw new Error('AI კრედიტი არ არის: Vercel-ში AI Gateway-ის ბალანსი შეავსეთ (მაგ. 5$)'); if (/credit card/i.test(msg)) throw new Error('AI-ს ჩასართავად Vercel-ში საბანკო ბარათია დასამატებელი (AI Gateway, უფასო კრედიტები)'); last = new Error(msg); continue; }
+    if (!r.ok) { console.error('model failed', model, r.status, JSON.stringify(j).slice(0, 300)); const msg = String((j.error && (j.error.message || j.error)) || 'HTTP ' + r.status); if (/free tier/i.test(msg)) throw new Error('AI კრედიტი არ არის: Vercel-ში AI Gateway-ის ბალანსი შეავსეთ (მაგ. 5$)'); if (/credit card/i.test(msg)) throw new Error('AI-ს ჩასართავად Vercel-ში საბანკო ბარათია დასამატებელი (AI Gateway, უფასო კრედიტები)'); last = new Error(msg); continue; }
     const img = j.choices && j.choices[0] && j.choices[0].message && (j.choices[0].message.images || [])[0];
     const url = img && img.image_url && img.image_url.url;
     const m = /^data:image\/(\w+);base64,(.+)$/.exec(url || '');
-    if (!m) { last = new Error('სურათი არ დაბრუნდა'); continue; }
+    if (!m) { console.error('model no image', model, JSON.stringify(j).slice(0, 400)); last = new Error('სურათი არ დაბრუნდა'); continue; }
     return { b64: m[2], format: m[1], model };
   }
   throw last || new Error('AI Gateway error');
