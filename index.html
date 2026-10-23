@@ -201,6 +201,15 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
 .ai-hints{display:flex;gap:6px;flex-wrap:wrap}
 .ai-hints button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;min-height:36px}
 
+.photo[hidden]{display:none}
+.photo{position:fixed;inset:0;background:rgba(29,35,33,.6);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+.photo-in{width:min(1180px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.photo-img{position:relative;border-radius:6px;overflow:hidden;background:#D9DBD6;aspect-ratio:3/2}
+.photo-img img{width:100%;height:100%;object-fit:contain;display:block}
+.photo-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;background:rgba(244,246,242,.72);font-size:16px;font-weight:600}
+.photo-wait[hidden]{display:none}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 .sheet{position:fixed;inset:0;background:rgba(29,35,33,.45);display:flex;justify-content:flex-end;z-index:20}
 .sheet-in{width:min(560px,100%);height:100%;background:var(--panel);display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(18px + env(safe-area-inset-bottom,0px));gap:14px}
 .sheet-head{display:flex;align-items:center;gap:12px}
@@ -255,6 +264,7 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
         <button type="button" data-view="front">წინიდან</button>
         <button type="button" data-view="close">ახლოდან</button>
         <button type="button" data-view="top">ზემოდან</button>
+        <button type="button" id="photoBtn">ფოტო</button>
         <button type="button" id="openBtn">გახსნა</button>
       </div>
       <div class="ai-box" id="aiBox" hidden>
@@ -273,6 +283,18 @@ tr.grp td{background:#EEF1EC;font-weight:600;font-size:13px;color:var(--accent)}
       </div>
     </aside>
   </main>
+</div>
+<div class="photo" id="photo" hidden>
+  <div class="photo-in" role="dialog" aria-label="პროექტის ფოტო">
+    <div class="sheet-head"><h2>პროექტის ფოტო</h2><button class="ghost" type="button" id="photoClose">დახურვა</button></div>
+    <div class="photo-img"><img id="photoImg" alt="პროექტის ხედი"><div class="photo-wait" id="photoWait" hidden><span class="spin"></span>AI ქმნის რეალისტურ ფოტოს… 20–60 წამი</div></div>
+    <p class="note" id="photoNote"></p>
+    <div class="actions">
+      <button type="button" class="primary" id="photoAi">რეალისტური ფოტო (AI)</button>
+      <button type="button" id="photoDl">ჩამოტვირთვა</button>
+      <button type="button" id="photoShow">3D ხედი</button>
+    </div>
+  </div>
 </div>
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-in" role="dialog" aria-label="პროექტები">
@@ -941,8 +963,10 @@ function pick(cx,cy){
   const hits=ray.intersectObjects(furniture?[furniture,roomG]:[roomG],true);
   if(!hits.length)return;const o=hits[0].object;const part=o.userData.part||'body';selMod=o.userData.mod||null;
   let pv=o;while(pv&&pv!==furniture&&!pv.userData.kind)pv=pv.parent;
-  if(pv&&pv.userData&&pv.userData.kind){if(part==='ins'){selDr=pv.userData.fi;}else if(openOnly&&openOnly.mod===pv.userData.mod&&openOnly.fi===pv.userData.fi)openOnly=null;
-    else{openOnly={mod:pv.userData.mod,fi:pv.userData.fi};if(pv.userData.kind==='drawer'){selDr=pv.userData.fi;focusPivot(pv);}}}
+  const isPv=pv&&pv.userData&&pv.userData.kind;
+  if(openT&&isPv)setOpen(false);
+  else if(openOnly&&(!isPv||openOnly.mod===pv.userData.mod))openOnly=null;
+  else if(isPv){openOnly={mod:pv.userData.mod,fi:pv.userData.fi};if(pv.userData.kind==='drawer'){selDr=pv.userData.fi;focusPivot(pv);}}
   if(selBox){scene.remove(selBox);selBox=null;}
   if(part!=='wall'&&part!=='floor'){if(selMod&&S.type==='kitchen')highlightMod(selMod);else{selBox=new THREE.BoxHelper(o,0xA9844A);scene.add(selBox);}}
   openQuick(part);
@@ -1338,6 +1362,7 @@ function render(){
       <button type="button" class="primary" id="actSave">შენახვა</button>
       <button type="button" id="actCsv">CSV ფაილი</button>
       <button type="button" id="actCopy">ტექსტის კოპირება</button>
+      <button type="button" id="actPhoto">პროექტის ფოტო</button>
     </div>
     <p class="toast" id="toast" aria-live="polite"></p>
     <textarea class="copybox" id="copybox" hidden readonly aria-label="დეტალირება ტექსტად"></textarea>`;
@@ -1354,6 +1379,7 @@ function render(){
       <button type="button" class="primary" id="actShare">სახერხში გაგზავნა</button>
       <button type="button" id="actCsv">CSV ფაილი</button>
       <button type="button" id="actHw">ფურნიტურის სია</button>
+      <button type="button" id="actPhoto">პროექტის ფოტო</button>
     </div></div>
     <p class="toast" id="toast" aria-live="polite"></p>
     <textarea class="copybox" id="copybox" hidden readonly aria-label="ტექსტი გასაგზავნად"></textarea>`;
@@ -1388,6 +1414,11 @@ document.addEventListener('click',e=>{
     change();return;}
   if(b.id==='demoBtn'){runDemo();return;}
   if(b.id==='openBtn'){setOpen(!openT);return;}
+  if(b.id==='photoBtn'||b.id==='actPhoto'){openPhoto();return;}
+  if(b.id==='photoClose'){document.getElementById('photo').hidden=true;return;}
+  if(b.id==='photoAi'){aiPhoto();return;}
+  if(b.id==='photoDl'){photoDownload();return;}
+  if(b.id==='photoShow'){const im=document.getElementById('photoImg');im.src=im.src===shotURL&&aiURL?aiURL:shotURL;b.textContent=im.src===shotURL?'AI ფოტო':'3D ხედი';return;}
   if(b.dataset.mnd){const p=b.dataset.mnd.split(':'),ref=p[0]+':'+p[1];selDr=0;modEdit(ref,(ms,i)=>{ms[i].nd=+p[2];ms[i].ins=DEFINS[+p[2]].slice();});openFront(ref,0,true);return;}
   if(b.dataset.mdr){const p=b.dataset.mdr.split(':'),ref=p[0]+':'+p[1];selDr=+p[2];openFront(ref,selDr,true);render();return;}
   if(b.dataset.mins){const p=b.dataset.mins.split(':'),ref=p[0]+':'+p[1],k=+p[2];selDr=k;modEdit(ref,(ms,i)=>{const a=insFor(ms[i]);a[k]=p[3];ms[i].ins=a;ms[i].nd=a.length;});openFront(ref,k,false);return;}
@@ -1508,6 +1539,64 @@ function plainText(){
   if(Object.keys(R.APP).length){s+=`\nტექნიკა და სანტექნიკა\n`;Object.entries(R.APP).forEach(([k,v])=>s+=`  ${k}: ${v}\n`);}
   if(R.PROC.length){s+=`\nდამუშავება\n`;R.PROC.forEach(([k,v])=>s+=`  ${k}: ${v}\n`);}
   return s;
+}
+function stampNow(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+async function saveBlob(filename,blob,say){
+  let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){}
+  if(!dl&&!window.claude){
+    try{if(navigator.canShare&&/^image/.test(blob.type)){const f=new File([blob],filename,{type:blob.type});if(navigator.canShare({files:[f]})&&/Android|iPad|iPhone/.test(navigator.userAgent)){await navigator.share({files:[f],title:'NOVORA'});say('გაიგზავნა.');return;}}}catch(e){if(e&&e.name==='AbortError')return;}
+    try{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);say('ფაილი ჩამოიტვირთა.');}catch(_){say('ფაილი ვერ ჩამოიტვირთა.');}
+    return;}
+  if(!dl){say('ჩამოტვირთვა აქ არ მუშაობს.');return;}
+  try{await dl.save({filename,data:blob});say('ფაილი ჩამოიტვირთა.');}catch(err){say(err&&err.code==='declined'?'ჩამოტვირთვა გაუქმდა.':'ფაილი ვერ ჩამოიტვირთა.');}
+}
+/* ---------- project photo: clean 3D render, then optional AI photoreal pass (/api/photo on the hosted app) ---------- */
+let shotURL=null,aiURL=null,aiReady=null;
+function snapshot(){
+  const pr=renderer.getPixelRatio(),oo=openOnly,hb=selBox&&selBox.visible;openOnly=null;applyOpen(0,true);if(selBox)selBox.visible=false;
+  renderer.setPixelRatio(1);renderer.setSize(1536,1024,false);camera.aspect=1.5;camera.clearViewOffset();camera.updateProjectionMatrix();
+  camera.position.set(cam.target.x+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta),cam.target.y+cam.r*Math.cos(cam.phi),cam.target.z+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta));camera.lookAt(cam.target);
+  renderer.render(scene,camera);const url=renderer.domElement.toDataURL('image/jpeg',.9);
+  renderer.setPixelRatio(pr);resize();viewOff=-1;openOnly=oo;applyOpen(openA,true);if(selBox)selBox.visible=!!hb;return url;
+}
+function photoPrompt(){
+  const fm=byId(MATERIALS,S.material),fc=byId(COLORS,S.front),fu=byId(COLORS,S.frontU)||fc,bc=byId(COLORS,S.body),tp=byId(TOPS,S.top),wl=byId(WALLS,S.wall)||WALLS[0],flr=byId(FLOORS,S.floor)||FLOORS[0],hc=byId(HCOLORS,S.hcolor);
+  const col=c=>`${c.n} (${c.hex}${c.wood?', wood grain':''})`;const T={kitchen:'fitted kitchen',wardrobe:'built-in wardrobe',vanity:'bathroom vanity with mirror'}[S.type];
+  let s=`Turn this 3D render into a photorealistic professional interior photograph of the same ${T}. Keep EXACTLY the same camera angle, room, layout, cabinet positions, sizes, proportions, door and drawer divisions, appliances and openings. Do not add, remove or move any furniture, cabinets or appliances.`;
+  s+=` Cabinet fronts: ${fm.n} finish (${S.material==='paint'?'painted MDF, '+byId(GLOSS,S.gloss).n:fm.s||''}) in ${S.split&&S.type==='kitchen'?'lower '+col(fc)+', upper '+col(fu):col(fc)}${S.style==='shaker'?', shaker frame doors':S.style==='fluted'?', vertically fluted fronts':S.style==='gola'?', handleless gola profile':''}.`;
+  if(S.style!=='gola')s+=` Handles: ${S.handle==='routed'?'routed integrated finger pulls':S.handle==='knob'?'small round knobs':'slim bar handles'} in ${hc.n==='შავი'?'matte black':hc.id==='steel'?'brushed steel':'brass'}.`;
+  s+=` Carcass decor ${col(bc)}.`;if(S.type==='kitchen')s+=` Worktop: ${tp.id==='quartz'?'white quartz':tp.id==='concrete'?'grey concrete look':tp.id==='granite'?'black granite':'solid oak'}, ${S.tt} mm thick.`;
+  s+=` Walls painted ${wl.hex}, floor ${flr.c?'laminate '+flr.c:'light oak laminate'} (${flr.hex}).`;
+  if(S.type==='kitchen'&&S.ledc!=='off'&&S.upper)s+=` Warm LED strip under the wall cabinets.`;
+  return s+` Natural daylight, soft realistic shadows, real material textures, 24mm lens, high-end interior magazine photo, no people, no text, no watermark.`;
+}
+async function checkAi(){
+  if(aiReady!==null)return aiReady;if(!/^https?:/.test(location.protocol)||window.claude){aiReady=false;return false;}
+  try{const r=await fetch('/api/photo',{cache:'no-store'});const j=await r.json();aiReady=!!(r.ok&&j.ready);}catch(_){aiReady=false;}return aiReady;
+}
+function photoSay(t){document.getElementById('photoNote').textContent=t;}
+async function openPhoto(){
+  if(qPart)closeQuick();shotURL=snapshot();aiURL=null;const im=document.getElementById('photoImg');im.src=shotURL;
+  document.getElementById('photo').hidden=false;document.getElementById('photoShow').hidden=true;document.getElementById('photoWait').hidden=true;
+  const ai=document.getElementById('photoAi');ai.disabled=false;photoSay('ეს არის 3D ხედი იმავე კუთხიდან, საიდანაც ახლა უყურებ. კუთხე შეცვალე 3D-ში და ისევ დააჭირე „ფოტო“.');
+  const ok=await checkAi();ai.hidden=!ok;
+  if(!ok)photoSay(window.claude?'რეალისტური AI ფოტო მუშაობს novora.phillych.ge-ზე. აქ შეგიძლია 3D ხედის ჩამოტვირთვა.':'რეალისტური AI ფოტოსთვის საჭიროა AI გასაღების ჩართვა (Vercel-ში). მანამდე შეგიძლია 3D ხედის ჩამოტვირთვა.');
+}
+async function aiPhoto(){
+  const ai=document.getElementById('photoAi'),w=document.getElementById('photoWait');if(ai.disabled)return;ai.disabled=true;w.hidden=false;photoSay('');
+  try{const r=await fetch('/api/photo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image:shotURL,prompt:photoPrompt()})});
+    let j={};try{j=await r.json();}catch(_){}
+    if(!r.ok||!j.b64)throw new Error(j.error||('HTTP '+r.status));
+    aiURL='data:image/'+(j.format||'jpeg')+';base64,'+j.b64;document.getElementById('photoImg').src=aiURL;
+    const sh=document.getElementById('photoShow');sh.hidden=false;sh.textContent='3D ხედი';
+    photoSay('რეალისტური ფოტო მზადაა. AI ზოგჯერ წვრილმანებს ცვლის, ზომები და დეტალები ზუსტია მხოლოდ დეტალირებაში.');}
+  catch(e){photoSay('AI ფოტო ვერ შეიქმნა: '+(e&&e.message||'შეცდომა')+'. სცადე თავიდან.');}
+  finally{w.hidden=true;ai.disabled=false;}
+}
+async function photoDownload(){
+  const url=document.getElementById('photoImg').src;if(!url)return;const blob=await (await fetch(url)).blob();
+  const name=`novora-${(S.client||TYPES[S.type].n).replace(/[^\p{L}\p{N}]+/gu,'-')}-${stampNow()}${url===aiURL?'-ai':''}.${/png/.test(blob.type)?'png':'jpg'}`;
+  await saveBlob(name,blob,photoSay);
 }
 async function exportCsv(){
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(_){}
