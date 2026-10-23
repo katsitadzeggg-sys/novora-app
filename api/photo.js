@@ -10,7 +10,6 @@ module.exports = async (req, res) => {
   console.log('photo', req.method, 'engine', gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : 'none', 'origin', req.headers.origin || req.headers.referer || '-');
   if (req.method === 'GET') {
     const engine = gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : null;
-    if (req.query && req.query.probe === 'nv7q2k' && gw) { try { const o = await gateway(gw, 'A small photorealistic wooden kitchen cabinet.', null, 'high'); res.status(200).json({ probe: o.model, bytes: o.b64.length }); } catch (e) { res.status(200).json({ probe: 'fail', error: String(e.message || e) }); } return; }
     res.status(200).json({ ready: !!engine, engine }); return;
   }
   if (req.method !== 'POST') { res.status(405).json({ error: 'method not allowed' }); return; }
