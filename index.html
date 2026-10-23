@@ -960,7 +960,7 @@ function demoAmount(now){if(demoT0<0)return 0;const t=(now-demoT0)/1000;if(t>3.4
 let openOnly=null,selDr=0;
 function applyOpen(a,snap){if(!furniture)return;furniture.traverse(pv=>{const k=pv.userData.kind;if(!k)return;
   const tg=(openOnly&&pv.userData.mod===openOnly.mod&&pv.userData.fi===openOnly.fi)?1:a;let c=pv.userData.cur;c=(snap||c===undefined)?tg:c+(tg-c)*.14;if(Math.abs(c-tg)<.001)c=tg;pv.userData.cur=c;
-  if(k==='door')pv.rotation.y=-pv.userData.dir*c*1.45;else if(k==='drawer')pv.position.z=c*.42;else if(k==='lift')pv.rotation.x=-c*1.25;else if(k==='drop')pv.rotation.x=c*1.35;});}
+  if(k==='door')pv.rotation.y=pv.userData.dir*c*1.6;else if(k==='drawer')pv.position.z=c*.42;else if(k==='lift')pv.rotation.x=-c*1.25;else if(k==='drop')pv.rotation.x=c*1.35;});}
 function findPivot(mod,fi){let r=null;if(furniture)furniture.traverse(pv=>{if(!r&&pv.userData.kind&&pv.userData.mod===mod&&pv.userData.fi===fi)r=pv;});return r;}
 function focusPivot(pv){if(!pv||pv.userData.kind!=='drawer')return;furniture.updateMatrixWorld(true);
   const c=new THREE.Box3().setFromObject(pv).getCenter(new THREE.Vector3()),q=new THREE.Quaternion();pv.parent.getWorldQuaternion(q);
