@@ -9,11 +9,6 @@ module.exports = async (req, res) => {
   const gw = process.env.AI_GATEWAY_API_KEY || (process.env.AI_GATEWAY_ON === '1' ? (req.headers['x-vercel-oidc-token'] || process.env.VERCEL_OIDC_TOKEN) : null);
   if (req.method === 'GET') {
     const engine = gem ? 'gemini' : oai ? 'openai' : gw ? 'gateway' : null;
-    if (req.query && req.query.test === '1' && engine === 'gateway') {
-      try { const out = await gateway(gw, 'A small photorealistic wooden kitchen cabinet on a white background.', null); res.status(200).json({ ready: true, engine, test: 'ok', model: out.model, bytes: out.b64.length }); }
-      catch (e) { res.status(200).json({ ready: false, engine, test: String((e && e.message) || e).slice(0, 300) }); }
-      return;
-    }
     res.status(200).json({ ready: !!engine, engine }); return;
   }
   if (req.method !== 'POST') { res.status(405).json({ error: 'method not allowed' }); return; }
