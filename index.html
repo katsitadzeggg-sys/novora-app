@@ -1506,6 +1506,7 @@ function newProject(){selMod=null;setOpen(false);S=JSON.parse(JSON.stringify(DEF
 const SB_URL='https://hzsoschqllsnbwsbufqd.supabase.co',SB_KEY='sb_publishable_efvDDxySi05vrJ6Zp6304A_-cjDdVUG';
 const HOSTED=!window.claude&&/^https?:/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname);
 let db=null,col=null,projects=[],useLocal=false;
+let sb=null,me=null;
 const LKEY='novora-projects';
 function localLoad(){try{return JSON.parse(localStorage.getItem(LKEY)||'[]');}catch(_){return [];}}
 function localStore(list){try{localStorage.setItem(LKEY,JSON.stringify(list));return true;}catch(_){return false;}}
@@ -1844,7 +1845,7 @@ body (კორპუსი, მხოლოდ LAM): ${colorsFor('lam').map(c=>
   finally{aiBusy=false;}
 }
 /* ---------- Novora cloud: master accounts, licence, devices, projects, client confirmation, admin (hosted app only) ---------- */
-let sb=null,me=null,beat=null,gateMode=null,adminRows=[],confirmTok=null;
+let beat=null,gateMode=null,adminRows=[],confirmTok=null;
 const isUuid=s=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s||''));
 const $gate=document.createElement('div');$gate.className='gate';$gate.id='gate';$gate.hidden=true;document.body.appendChild($gate);
 function deviceId(){let d=null;try{d=localStorage.getItem('novora-device');}catch(_){}if(!d){d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);try{localStorage.setItem('novora-device',d);}catch(_){}}return d;}
